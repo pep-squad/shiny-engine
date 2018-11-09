@@ -3,6 +3,6 @@ sudo mkdir /usr/bin/ble
 while :
 do
 	echo "scanning..."
-	sudo bash ble.sh
+	sudo bash ble_scan.sh
 	sleep 1
 done
