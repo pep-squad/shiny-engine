@@ -7,7 +7,6 @@ BLE::BLE(unsigned long long packet) {}
 void BLE::scan() {
   // int outfd[2];
   // int infd[2];
-  std::cout << "BEFORE : " << &packets << std::endl;
 
   // pipes for parent to write and read
   pipe(pipes[PARENT_READ_PIPE]);
@@ -16,7 +15,6 @@ void BLE::scan() {
   pid_t pid  = fork();
   if(pid > 0) {
     // child process
-    std::cout << "CHILD : " << &packets << std::endl;
     dup2(CHILD_READ_FD, STDIN_FILENO);
     dup2(CHILD_WRITE_FD, STDOUT_FILENO);
 
@@ -30,7 +28,6 @@ void BLE::scan() {
     execl("/bin/bash","bash","/home/pi/shiny-engine/bash/ble_scan.sh", NULL); // change to some common place later
   } else if (pid == 0) {
     // parent process
-    std::cout << "PARENT : " << &packets << std::endl;
     char buffer[200];
     int count;
 

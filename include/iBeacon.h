@@ -37,16 +37,17 @@ _______________________________________________
 
 class iBeacon : protected BLE {
 private:
-  unsigned int advFlags;
-  unsigned int advHeader;
-  unsigned int companyID;
-  unsigned int iBeaconType;
-  unsigned int iBeaconLength;
-  unsigned int uuid;
-  unsigned int major;
-  unsigned int minor;
-  unsigned int txPower;
-  void extractPacket(std::string packet);
+  // unsigned int advFlags;
+  // unsigned int advHeader;
+  // unsigned int companyID;
+  // unsigned int iBeaconType;
+  // unsigned int iBeaconLength;
+  unsigned long long ibeacon_1, ibeacon_2;
+  unsigned long long uuid_1, uuid_2, uuid_3, uuid_4;
+  unsigned long maj;
+  unsigned long min;
+  long txPower;
+  void extractPacket(std::string packet, std::queue<iBeacon> *packets);
 protected:
   // Set the packet structure
   void setAdvFlags(unsigned int advFlags);
@@ -55,21 +56,26 @@ protected:
   void setiBeaconType(unsigned int type);
   void setiBeaconLength(unsigned int length);
   void setUUID(unsigned int uuid);
-  void setMajor(unsigned int major);
+  void setMajor(unsigned int maj);
   void setMinor(unsigned int minor);
   void setTxPower(unsigned int txPower);
 public:
   iBeacon ();
-  iBeacon (unsigned long long packet);
+  iBeacon (unsigned long long ibeacon_1, unsigned long long ibeacon_2, \
+          unsigned long long uuid_1, unsigned long long uuid_2, \
+          unsigned long long uuid_3, unsigned long long uuid_4, \
+          unsigned long maj, unsigned long minor, unsigned long txPower);
+  std::queue<iBeacon> packets;
   void scan();
+  void send();
   unsigned int getAdvFlags();
   unsigned int getAdvHeader();
   unsigned int getCompanyID();
   unsigned int getiBeaconType();
   unsigned int getiBeaconLength();
   unsigned int getUUID();
-  unsigned int getMajor();
-  unsigned int getMinor();
-  unsigned int getTxPower();
+  unsigned long getMajor();
+  unsigned long getMinor();
+  long getTxPower();
 };
 #endif

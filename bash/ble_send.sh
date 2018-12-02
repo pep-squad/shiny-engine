@@ -1,4 +1,4 @@
-sudo hcitool -i hci0 cmd 0x08 0x0008 1E 02 01 1A 1A FF 4C 00 02 15 63 6F 3F 8F 64 91 4B EE 95 F7 D8 CC 64 A8 63 B5 00 00 00 00 C8 00
+sudo hcitool -i hci0 cmd 0x08 0x0008 $1
 # http://www.wadewegner.com/2014/05/create-an-ibeacon-transmitter-with-the-raspberry-pi/
 # sudo hcitool -i hci0 cmd 0x08 0x0008 1E 02 01 1A 1A FF 4C 00 02 15 63 6F 3F 8F 64 91 4B EE 95 F7 D8 CC 64 A8 63 B5 00 00 00 00 C8 00
 # ox08    # OGF
@@ -17,7 +17,7 @@ sudo hcitool -i hci0 cmd 0x08 0x0008 1E 02 01 1A 1A FF 4C 00 02 15 63 6F 3F 8F 6
 # 4C 00 	# Company identifier code (0x004C == Apple)
 # 02    	# Byte 0 of iBeacon advertisement indicator
 # 15    	# Byte 1 of iBeacon advertisement indicator
-# 63 6F 3F 8F 64 91 4B EE 95 F7 D8 CC 64 A8 63 B5 # our iBeacon proximity uuid
+# 63 6F 3F 8F 64 91 4B EE 95 F7 D8 CC 64 A8 63 B5 # iBeacon proximity uuid
 # 00 00 	# Major
 # 00 00 	# Minor
-# C8 00 	# Calibrated Tx power
+# C8 00   # Calibrated Tx power
