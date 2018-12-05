@@ -6,6 +6,14 @@
 iBeacon::iBeacon () : ibeacon_1(0x0), ibeacon_2(0x0), uuid_1(0x0), uuid_2(0x0), \
                     uuid_3(0x0), uuid_4(0x0), maj(0x0), min(0x0), txPower(0x0) {}
 
+iBeacon::iBeacon (unsigned long long ibeacon_1, unsigned long long ibeacon_2, \
+        unsigned long long uuid_1, unsigned long long uuid_2, \
+        unsigned long long uuid_3, unsigned long long uuid_4, \
+        unsigned long maj, unsigned long min, unsigned long txPower) :
+        ibeacon_1(ibeacon_1), ibeacon_2(ibeacon_2), uuid_1(uuid_1), \
+        uuid_2(uuid_2), uuid_3(uuid_3), uuid_4(uuid_4), maj(maj), \
+        min(min), txPower(txPower) {}
+
 unsigned long long hexToDec(std::string hex) {
   unsigned long long dec;
   dec = 0;
@@ -29,14 +37,6 @@ long twosComp(long tx) {
   tx *= -1;
   return tx;
 }
-
-iBeacon::iBeacon (unsigned long long ibeacon_1, unsigned long long ibeacon_2, \
-        unsigned long long uuid_1, unsigned long long uuid_2, \
-        unsigned long long uuid_3, unsigned long long uuid_4, \
-        unsigned long maj, unsigned long min, unsigned long txPower) :
-        ibeacon_1(ibeacon_1), ibeacon_2(ibeacon_2), uuid_1(uuid_1), \
-        uuid_2(uuid_2), uuid_3(uuid_3), uuid_4(uuid_4), maj(maj), \
-        min(min), txPower(txPower) {}
 
 void iBeacon::scan() {
   BLE ble;

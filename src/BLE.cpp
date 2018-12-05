@@ -2,8 +2,6 @@
 // sudo apt-get install libboost-all-dev
 BLE::BLE() {}
 
-BLE::BLE(unsigned long long packet) {}
-
 void BLE::scan() {
   // int outfd[2];
   // int infd[2];
@@ -25,7 +23,7 @@ void BLE::scan() {
     close(PARENT_WRITE_FD);
 
     // execute the bash script to read ble packets
-    execl("/bin/bash","bash","/home/pi/shiny-engine/bash/ble_scan.sh", NULL); // change to some common place later
+    execl("/bin/bash","bash","/home/pi/shiny-engine/bash/ble_scan.sh", NULL); // change to some common place later (/usr/bin)
   } else if (pid == 0) {
     // parent process
     char buffer[200];

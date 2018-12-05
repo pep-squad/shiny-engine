@@ -1,4 +1,3 @@
-
 #ifndef __BLE_H__
 #define __BLE_H__
 
@@ -33,7 +32,6 @@ public:
   std::queue<std::string> packets;
   // Instantiate a new BLE packet
   BLE();
-  BLE(unsigned long long packet);
   // get the values for all BLE packets
   void scan();
 };

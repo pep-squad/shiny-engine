@@ -1,4 +1,3 @@
-
 #ifndef __IBEACON_H__
 #define __IBEACON_H__
 
