@@ -1,4 +1,3 @@
-// https://www.piprojects.xyz/ultrasonic-distance-sensor/
 #include "HCSR04.h"
 
 HCSR04::HCSR04(int t, int e) : trig(t), echo(e) {

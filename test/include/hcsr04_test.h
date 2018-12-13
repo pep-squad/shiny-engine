@@ -3,6 +3,7 @@
 
 #include "HCSR04.h"
 
+void *hcsr04Scan(void *threadid);
 void testHCSR04();
 
 #endif
