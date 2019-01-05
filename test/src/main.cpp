@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <wiringPi.h>
+#include <softPwm.h>
 
 // Three GPIOs are used
 // 1st - Enable/Disable signal
@@ -48,6 +49,10 @@ int DirectionBit1_1=28;
 int EnableDisable_2=23;
 int DirectionBit0_2=24;
 int DirectionBit1_2=25;
+
+int EnableDisable_3=0;
+int DirectionBit3_0=2;
+int DirectionBit3_1=3;
 
 // Function to trap <CTRL>C
 void CatchCTRLC(int c)
@@ -75,10 +80,11 @@ void CatchKill(int c)
 	exit(0);
 }
 
-int main (int argc, char *argv[])
+/*int main (int argc, char *argv[])
 {
 	wiringPiSetup();
 
+// HARDWARE PWM
 // Set up pins to all OUTPUT
 	pinMode(EnableDisable_2,PWM_OUTPUT);
 	pinMode(DirectionBit0_2,OUTPUT);
@@ -120,43 +126,42 @@ int main (int argc, char *argv[])
 		delay(2000);
 	}
 
-/*	// software PWM
-	// Set up pins to all OUTPUT
-		pinMode(EnableDisable,OUTPUT);
-		pinMode(DirectionBit0,OUTPUT);
-		pinMode(DirectionBit1,OUTPUT);
-		digitalWrite(EnableDisable,LOW);
-		int errPwm = softPwmCreate(EnableDisable, 0, 100);
-		if (errPwm != 0) {
-			fprintf(stdout, "ERROR\n");
-			exit(0);
-		}
-
-		// Set up to catch <CTRL>C and "kill"
-		signal(SIGINT,CatchCTRLC);
-		signal(SIGTERM,CatchKill);
-		while(1)
-		{
-	// Forward
-			// digitalWrite(EnableDisable,LOW);
-			softPwmWrite(EnableDisable, 100);
-			delay(1000);
-			printf("forward\n");
-			digitalWrite(DirectionBit0,LOW);
-			digitalWrite(DirectionBit1,HIGH);
-			digitalWrite(EnableDisable,HIGH);
-			delay(2000);
-
-	// Reverse
-			// digitalWrite(EnableDisable,LOW);
-			softPwmWrite(EnableDisable, 25);
-			delay(1000);
-			printf("reverse\n");
-			digitalWrite(DirectionBit0,HIGH);
-			digitalWrite(DirectionBit1,LOW);
-			digitalWrite(EnableDisable,HIGH);
-			delay(2000);
-		}*/
-
 	return 0 ;
+}*/
+
+int main() {
+	wiringPiSetup();
+	pinMode(EnableDisable_3, OUTPUT);
+	pinMode(DirectionBit3_0, OUTPUT);
+	pinMode(DirectionBit3_1, OUTPUT);
+
+	digitalWrite(EnableDisable_3, HIGH);
+	// digitalWrite(DirectionBit3_0, LOW);
+	// digitalWrite(DirectionBit3_1, LOW);
+	int one = softPwmCreate(DirectionBit3_0, 0, 100);
+	int two = softPwmCreate(DirectionBit3_1, 0, 100);
+
+	if (one != 0 || two != 0) {
+		printf("ERROR\n");
+		exit(0);
+	}
+
+	printf("Spinning Up\n");
+	softPwmWrite(DirectionBit3_0, 50);
+	softPwmWrite(DirectionBit3_1, 0);
+	delay(5000); //let it spin for 5 seconds
+
+	softPwmWrite(DirectionBit3_0, 100);
+	softPwmWrite(DirectionBit3_1, 0);
+	delay(5000); //let it spin for 5 seconds
+
+
+	softPwmWrite(DirectionBit3_0, 25);
+	softPwmWrite(DirectionBit3_1, 0);
+	delay(5000); //let it spin for 5 seconds
+
+
+	printf("Stopping…\n");
+	softPwmWrite(DirectionBit3_0, 0);
+	return 0;
 }
