@@ -1,17 +1,3 @@
-// #include "ble_test.h"
-// #include "ibeacon_test.h"
-// #include "hcsr04_test.h"
-
-/*int main(int argc, char const *argv[]) {
-  // testBLE();
-  // testIBeacon();
-  testHCSR04();
-  return 0;
-}*/
-
-
-
-
 // http://www.noveldevices.co.uk/rp-project-motor-control
 
 /****************************************************************************
@@ -41,30 +27,31 @@
 // 3rd - bit 1 of 2-bit signal to control direction
 
 //	Using Pi B+ or B2
-int EnableDisable_1=1;
-int DirectionBit0_1=29;
-int DirectionBit1_1=28;
-
-int EnableDisable_2=23;
-int DirectionBit0_2=24;
-int DirectionBit1_2=25;
+// MOTOR 1
+int EnableDisable=26; // WiringPi 26, physical 35
+int DirectionBit0=27; // WiringPi 27, physical 36
+int DirectionBit1=28; // WiringPi 28, physical 37
+// MOTOR 2
+/*int EnableDisable=23; // WiringPi 23, physical 32
+int DirectionBit0=24; // WiringPi 24, physical 36
+int DirectionBit1=25; // WiringPi 25, physical 38*/
 
 // Function to trap <CTRL>C
-void CatchCTRLC(int c)
+void CatchCTRLC()
 {
-	pwmWrite(EnableDisable_2,LOW);
-	digitalWrite(DirectionBit0_2,LOW);
-	digitalWrite(DirectionBit1_2,LOW);
+	digitalWrite(EnableDisable,LOW);
+	digitalWrite(DirectionBit0,LOW);
+	digitalWrite(DirectionBit1,LOW);
 	printf("exiting\n");
 	exit(0);
 }
 
 // Function to trap "kill" command
-void CatchKill(int c)
+void CatchKill()
 {
-	pwmWrite(EnableDisable_2,LOW);
-	digitalWrite(DirectionBit0_2,LOW);
-	digitalWrite(DirectionBit1_2,LOW);
+	digitalWrite(EnableDisable,LOW);
+	digitalWrite(DirectionBit0,LOW);
+	digitalWrite(DirectionBit1,LOW);
 	printf("exiting because a kill command was issued\n");
 	exit(0);
 }
@@ -74,9 +61,9 @@ int main (int argc, char *argv[])
 	wiringPiSetup();
 
 // Set up pins to all OUTPUT
-	pinMode(EnableDisable_2,PWM_OUTPUT);
-	pinMode(DirectionBit0_2,OUTPUT);
-	pinMode(DirectionBit1_2,OUTPUT);
+	pinMode(EnableDisable,OUTPUT);
+	pinMode(DirectionBit0,OUTPUT);
+	pinMode(DirectionBit1,OUTPUT);
 
 	// Set up to catch <CTRL>C and "kill"
 	signal(SIGINT,CatchCTRLC);
@@ -85,21 +72,21 @@ int main (int argc, char *argv[])
 	while(1)
 	{
 // Forward
-		pwmWrite(EnableDisable_2,LOW);
+		digitalWrite(EnableDisable,LOW);
 		delay(1000);
 		printf("forward\n");
-		digitalWrite(DirectionBit0_2,LOW);
-		digitalWrite(DirectionBit1_2,HIGH);
-		pwmWrite(EnableDisable_2,512);
+		digitalWrite(DirectionBit0,LOW);
+		digitalWrite(DirectionBit1,HIGH);
+		digitalWrite(EnableDisable,HIGH);
 		delay(2000);
 
 // Reverse
-		pwmWrite(EnableDisable_2,LOW);
+		digitalWrite(EnableDisable,LOW);
 		delay(1000);
 		printf("reverse\n");
-		digitalWrite(DirectionBit0_2,HIGH);
-		digitalWrite(DirectionBit1_2,LOW);
-		pwmWrite(EnableDisable_2,1024);
+		digitalWrite(DirectionBit0,HIGH);
+		digitalWrite(DirectionBit1,LOW);
+		digitalWrite(EnableDisable,HIGH);
 		delay(2000);
 	}
 
