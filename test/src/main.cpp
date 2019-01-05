@@ -41,8 +41,8 @@
 // 3rd - bit 1 of 2-bit signal to control direction
 
 //	Using Pi B+ or B2
-int EnableDisable_1=1;
-int DirectionBit0_1=29;
+int EnableDisable_1=26;
+int DirectionBit0_1=27;
 int DirectionBit1_1=28;
 
 int EnableDisable_2=23;
@@ -55,6 +55,9 @@ void CatchCTRLC(int c)
 	pwmWrite(EnableDisable_2,LOW);
 	digitalWrite(DirectionBit0_2,LOW);
 	digitalWrite(DirectionBit1_2,LOW);
+	pwmWrite(EnableDisable_1,LOW);
+	digitalWrite(DirectionBit0_1,LOW);
+	digitalWrite(DirectionBit1_1,LOW);
 	printf("exiting\n");
 	exit(0);
 }
@@ -65,6 +68,9 @@ void CatchKill(int c)
 	pwmWrite(EnableDisable_2,LOW);
 	digitalWrite(DirectionBit0_2,LOW);
 	digitalWrite(DirectionBit1_2,LOW);
+	pwmWrite(EnableDisable_1,LOW);
+	digitalWrite(DirectionBit0_1,LOW);
+	digitalWrite(DirectionBit1_1,LOW);
 	printf("exiting because a kill command was issued\n");
 	exit(0);
 }
@@ -77,6 +83,9 @@ int main (int argc, char *argv[])
 	pinMode(EnableDisable_2,PWM_OUTPUT);
 	pinMode(DirectionBit0_2,OUTPUT);
 	pinMode(DirectionBit1_2,OUTPUT);
+	pinMode(EnableDisable_1,PWM_OUTPUT);
+	pinMode(DirectionBit0_1,OUTPUT);
+	pinMode(DirectionBit1_1,OUTPUT);
 
 	// Set up to catch <CTRL>C and "kill"
 	signal(SIGINT,CatchCTRLC);
@@ -85,23 +94,69 @@ int main (int argc, char *argv[])
 	while(1)
 	{
 // Forward
+		pwmWrite(EnableDisable_1,LOW);
 		pwmWrite(EnableDisable_2,LOW);
 		delay(1000);
 		printf("forward\n");
 		digitalWrite(DirectionBit0_2,LOW);
 		digitalWrite(DirectionBit1_2,HIGH);
+		digitalWrite(DirectionBit0_1,LOW);
+		digitalWrite(DirectionBit1_1,HIGH);
 		pwmWrite(EnableDisable_2,512);
+		pwmWrite(EnableDisable_1,2048);
 		delay(2000);
 
 // Reverse
+		pwmWrite(EnableDisable_1,LOW);
 		pwmWrite(EnableDisable_2,LOW);
 		delay(1000);
 		printf("reverse\n");
 		digitalWrite(DirectionBit0_2,HIGH);
 		digitalWrite(DirectionBit1_2,LOW);
+		digitalWrite(DirectionBit0_1,HIGH);
+		digitalWrite(DirectionBit1_1,LOW);
 		pwmWrite(EnableDisable_2,1024);
+		pwmWrite(EnableDisable_1,700);
 		delay(2000);
 	}
+
+/*	// software PWM
+	// Set up pins to all OUTPUT
+		pinMode(EnableDisable,OUTPUT);
+		pinMode(DirectionBit0,OUTPUT);
+		pinMode(DirectionBit1,OUTPUT);
+		digitalWrite(EnableDisable,LOW);
+		int errPwm = softPwmCreate(EnableDisable, 0, 100);
+		if (errPwm != 0) {
+			fprintf(stdout, "ERROR\n");
+			exit(0);
+		}
+
+		// Set up to catch <CTRL>C and "kill"
+		signal(SIGINT,CatchCTRLC);
+		signal(SIGTERM,CatchKill);
+		while(1)
+		{
+	// Forward
+			// digitalWrite(EnableDisable,LOW);
+			softPwmWrite(EnableDisable, 100);
+			delay(1000);
+			printf("forward\n");
+			digitalWrite(DirectionBit0,LOW);
+			digitalWrite(DirectionBit1,HIGH);
+			digitalWrite(EnableDisable,HIGH);
+			delay(2000);
+
+	// Reverse
+			// digitalWrite(EnableDisable,LOW);
+			softPwmWrite(EnableDisable, 25);
+			delay(1000);
+			printf("reverse\n");
+			digitalWrite(DirectionBit0,HIGH);
+			digitalWrite(DirectionBit1,LOW);
+			digitalWrite(EnableDisable,HIGH);
+			delay(2000);
+		}*/
 
 	return 0 ;
 }
