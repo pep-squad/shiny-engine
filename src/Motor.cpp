@@ -1,94 +1,85 @@
-// http://www.noveldevices.co.uk/rp-project-motor-control
+#include "Motor.h"
 
-/****************************************************************************
-* rp-motor-control.c                                                        *
-*                                                                           *
-* Uses a Texas Instruments L293D IC to drive a motor in forward and reverse *
-*                                                                           *
-* Source -> http://www.noveldevices.co.uk/rpdl/rp-motor-control.c           *
-*                                                                           *
-* Written by JST Lawrence, Novel Devices.                                   *
-*                                                                           *
-* Notes:                                                                    *
-* Uses the L293D Enable/Disable feature to avoid the risk of shorting the   *
-* supply. Traps CTRL-C so that outputs are off before the program ends.     *
-*                                                                           *
-****************************************************************************/
-
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <wiringPi.h>
-
-// Three GPIOs are used
-// 1st - Enable/Disable signal
-// 2nd - bit 0 of 2-bit signal to control direction
-// 3rd - bit 1 of 2-bit signal to control direction
-
-//	Using Pi B+ or B2
-// MOTOR 1
-int EnableDisable=26; // WiringPi 26, physical 35
-int DirectionBit0=27; // WiringPi 27, physical 36
-int DirectionBit1=28; // WiringPi 28, physical 37
-// MOTOR 2
-/*int EnableDisable=23; // WiringPi 23, physical 32
-int DirectionBit0=24; // WiringPi 24, physical 36
-int DirectionBit1=25; // WiringPi 25, physical 38*/
-
-// Function to trap <CTRL>C
-void CatchCTRLC()
-{
-	digitalWrite(EnableDisable,LOW);
-	digitalWrite(DirectionBit0,LOW);
-	digitalWrite(DirectionBit1,LOW);
-	printf("exiting\n");
-	exit(0);
+Motor::Motor(int pinEnable, int pinDirection1, int pinDirection2, pwm type) : \
+	enableDisable(pinEnable), direction1(pinDirection1), direction2(pinDirection2), type(type) {
+		if (type == HARDWARE) {
+			setupHardPwm();
+		} else if (type == SOFTWARE) {
+			setupSoftPwm();
+		}
 }
 
-// Function to trap "kill" command
-void CatchKill()
-{
-	digitalWrite(EnableDisable,LOW);
-	digitalWrite(DirectionBit0,LOW);
-	digitalWrite(DirectionBit1,LOW);
-	printf("exiting because a kill command was issued\n");
-	exit(0);
-}
-
-int main (int argc, char *argv[])
-{
+void Motor::setupSoftPwm() {
 	wiringPiSetup();
 
-// Set up pins to all OUTPUT
-	pinMode(EnableDisable,OUTPUT);
-	pinMode(DirectionBit0,OUTPUT);
-	pinMode(DirectionBit1,OUTPUT);
+	pinMode(enableDisable, OUTPUT);
+	pinMode(direction1, OUTPUT);
+	pinMode(direction2, OUTPUT);
 
-	// Set up to catch <CTRL>C and "kill"
-	signal(SIGINT,CatchCTRLC);
-	signal(SIGTERM,CatchKill);
+	digitalWrite(enableDisable, HIGH);
+	int one = softPwmCreate(direction1, 0, 100);
+	int two = softPwmCreate(direction2, 0, 100);
 
-	while(1)
-	{
-// Forward
-		digitalWrite(EnableDisable,LOW);
-		delay(1000);
-		printf("forward\n");
-		digitalWrite(DirectionBit0,LOW);
-		digitalWrite(DirectionBit1,HIGH);
-		digitalWrite(EnableDisable,HIGH);
-		delay(2000);
-
-// Reverse
-		digitalWrite(EnableDisable,LOW);
-		delay(1000);
-		printf("reverse\n");
-		digitalWrite(DirectionBit0,HIGH);
-		digitalWrite(DirectionBit1,LOW);
-		digitalWrite(EnableDisable,HIGH);
-		delay(2000);
+	if (one != 0 || two != 0) {
+		printf("ERROR\n");
+		// return an error code
 	}
+}
 
-	return 0 ;
+void Motor::setupHardPwm() {
+	wiringPiSetup();
+
+	pinMode(enableDisable, PWM_OUTPUT);
+	pinMode(direction1, OUTPUT);
+	pinMode(direction2, OUTPUT);
+}
+
+void Motor::hardForward(int strength) {
+	pwmWrite(enableDisable, LOW);
+	delay(1000);
+	digitalWrite(direction1, LOW);
+	digitalWrite(direction2, HIGH);
+	pwmWrite(enableDisable, strength);
+}
+
+void Motor::hardBackward(int strength) {
+	pwmWrite(enableDisable, LOW);
+	delay(10);
+	digitalWrite(direction1, HIGH);
+	digitalWrite(direction2, LOW);
+	pwmWrite(enableDisable, strength);
+}
+
+void Motor::softForward(int strength) {
+	digitalWrite(enableDisable, HIGH);
+	softPwmWrite(direction1, strength);
+	softPwmWrite(direction2, 0);
+}
+
+void Motor::softBackward(int strength) {
+	digitalWrite(enableDisable, HIGH);
+	softPwmWrite(direction1, 0);
+	softPwmWrite(direction2, strength);
+}
+
+void Motor::stop() {
+	digitalWrite(enableDisable, LOW);
+	digitalWrite(direction1, LOW);
+	digitalWrite(direction2, LOW);
+}
+
+void Motor::forward(int strength) {
+	if (type == HARDWARE) {
+		hardForward(strength);
+	} else if (type == SOFTWARE) {
+		softForward(strength);
+	}
+}
+
+void Motor::backward(int strength) {
+	if (type == HARDWARE) {
+		hardBackward(strength);
+	} else if (type == SOFTWARE) {
+		softBackward(strength);
+	}
 }

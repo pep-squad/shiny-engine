@@ -1,14 +1,15 @@
 // #include "ble_test.h"
 // #include "ibeacon_test.h"
 // #include "hcsr04_test.h"
+#include "motor_test.h"
 
-/*int main(int argc, char const *argv[]) {
+int main(int argc, char const *argv[]) {
   // testBLE();
   // testIBeacon();
-  testHCSR04();
+  // testHCSR04();
+	testMotors();
   return 0;
-}*/
-
+}
 
 
 
@@ -28,7 +29,7 @@
 * supply. Traps CTRL-C so that outputs are off before the program ends.     *
 *                                                                           *
 ****************************************************************************/
-
+/*
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,7 +81,7 @@ void CatchKill(int c)
 	exit(0);
 }
 
-/*int main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
 	wiringPiSetup();
 
@@ -100,6 +101,8 @@ void CatchKill(int c)
 	while(1)
 	{
 // Forward
+	printf("%d %d %d\n", EnableDisable_1, DirectionBit0_1, DirectionBit1_1);
+
 		pwmWrite(EnableDisable_1,LOW);
 		pwmWrite(EnableDisable_2,LOW);
 		delay(1000);
@@ -127,7 +130,7 @@ void CatchKill(int c)
 	}
 
 	return 0 ;
-}*/
+}
 
 int main() {
 	wiringPiSetup();
@@ -165,3 +168,4 @@ int main() {
 	softPwmWrite(DirectionBit3_0, 0);
 	return 0;
 }
+*/
