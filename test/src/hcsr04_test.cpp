@@ -1,44 +1,55 @@
-#include <cstdio>
-#include <iostream>
-#include <pthread.h>
 #include "hcsr04_test.h"
 
-typedef struct HCSR04GPIOPin {
-  int trig;
-  int echo;
-} GPIO;
+// std::vector<GPIO> pins;
 
-GPIO pins[2];
-
-void *hcsr04Scan(void *threadid) {
+void *hcsr04Scan(int threadid, std::vector<GPIO> pins, std::vector<std::vector<float>> &dist) {
   HCSR04 d (pins[(int)threadid].trig, pins[(int)threadid].echo);
+  std::vector<float> distance;
+  dist.push_back(distance);
   printf("%d %d-%d\n", (int)threadid, pins[(int)threadid].trig, pins[(int)threadid].echo);
-  while (1)
-  {
+  while (1) {
       printf("Distance: %fcm @ %d\n", d.distance(), (int)threadid);
-      delay(500);
+      // dist[threadid].push_back(d.distance());
+      // std::srand(time(0));
+      // int del = (std::rand() % 100) + 50;
+      delay(100);
   }
 }
 
 void testHCSR04() {
-  pthread_t threads[2];
-  int rc;
+  std::vector<std::thread> v;
+  std::vector<GPIO> pins;
+  std::vector<std::vector<float>> d;
+  GPIO tempPin;
 
-  // pins[0].trig = 1;
-  // pins[0].echo = 4;
-  // pins[1].trig = 7;
-  // pins[1].echo = 0;
-  pins[0].trig = 1;
-  pins[0].echo = 4;
-  pins[1].trig = 7;
-  pins[1].echo = 0;
+  tempPin.trig = 24;
+  tempPin.echo = 25;
+  pins.push_back(tempPin);
+  tempPin.trig = 22;
+  tempPin.echo = 23;
+  pins.push_back(tempPin);
+  tempPin.trig = 29;
+  tempPin.echo = 28;
+  pins.push_back(tempPin);
+  tempPin.trig = 0;
+  tempPin.echo = 2;
+  pins.push_back(tempPin);
 
-  for (size_t i = 0; i < 2; i++) {
-    rc = pthread_create(&threads[i], NULL, hcsr04Scan, (void*)i);
-
-    if (rc) {
-      std::cout << "FAILED " << i << std::endl;
-    }
+  // for (size_t i = 0; i < pins.size(); i++) {
+  for (size_t i = 2; i < 3; i++) {
+    v.push_back(std::thread(hcsr04Scan, i, pins, std::ref(d)));
+    delay(500);
   }
-  pthread_exit(NULL);
+
+  while (1) {
+    // for (unsigned i = 0; i < d.size(); i++) {
+    //   unsigned size = d[i].size();
+    //   for (unsigned j = 0; j < size; j++) {
+    //     std::cout << "Thread " << i << " distance=" << d[i][j] << std::endl;
+    //   }
+    //   d[i].erase(d[i].begin(), d[i].begin() + size);
+    // }
+    // std::cout << std::endl << std::endl;
+    // delay(1000);
+  }
 }
