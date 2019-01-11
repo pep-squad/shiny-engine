@@ -1,60 +1,22 @@
 #include "motor_test.h"
 
-void setupSoftMotor() {
-  Motor motor (27, 28);
-  printf("soft forward\n");
-  motor.forward(100);
-  delay(1000);
-  motor.forward(90);
-  delay(1000);
-  motor.forward(80);
-  delay(1000);
-  motor.forward(70);
-  delay(1000);
-  motor.forward(60);
-  delay(1000);
-  motor.forward(50);
-  delay(1000);
-  motor.forward(40);
-  delay(1000);
-  motor.forward(30);
-  delay(1000);
-  motor.forward(20);
-  delay(1000);
-  motor.forward(10);
-  delay(1000);
-
-  printf("stop\n");
-  // motor.forward(0);
+void setupSoftMotor(int threadid, MotorPins &motorPin) {
+  Motor motor(motorPin.direction1, motorPin.direction2);
+  int current = motorPin.strength;
+  while (motorPin.flag != END) {
+    if (motorPin.strength != current) {
+      current = motorPin.strength;
+      std::cout << "Thread " << threadid << " power " << current << std::endl;
+      if (current > 0 ) {
+        motor.forward(current);
+      } else if (current < 0) {
+        motor.backward((current*-1));
+      } else {
+        motor.stop();
+      }
+    }
+  }
   motor.stop();
-  delay(1000);
-
-  printf("backwards\n");
-  motor.backward(10);
-  delay(1000);
-  motor.backward(20);
-  delay(1000);
-  motor.backward(30);
-  delay(1000);
-  motor.backward(40);
-  delay(1000);
-  motor.backward(50);
-  delay(1000);
-  motor.backward(60);
-  delay(1000);
-  motor.backward(70);
-  delay(1000);
-  motor.backward(80);
-  delay(1000);
-  motor.backward(90);
-  delay(1000);
-  motor.backward(100);
-  delay(1000);
-
-  printf("done\n");
-  // motor.forward(0);
-  motor.stop();
-  delay(1000);
 }
 
 void setupHardMotor() {
@@ -73,6 +35,56 @@ void setupHardMotor() {
 }
 
 void testMotors() {
-  // setupHardMotor();
-  setupSoftMotor();
+  std::vector<std::thread> v;
+  std::vector<MotorPins> motorPins;
+  MotorPins tempMotor;
+
+  tempMotor.direction1 = 27;
+  tempMotor.direction2 = 28;
+  tempMotor.strength = 0;
+  tempMotor.flag = START;
+  motorPins.push_back(tempMotor);
+  tempMotor.direction1 = 25;
+  tempMotor.direction2 = 24;
+  tempMotor.strength = 0;
+  tempMotor.flag = START;
+  motorPins.push_back(tempMotor);
+  tempMotor.direction1 = 23;
+  tempMotor.direction2 = 22;
+  tempMotor.strength = 0;
+  tempMotor.flag = START;
+  motorPins.push_back(tempMotor);
+  tempMotor.direction1 = 4;
+  tempMotor.direction2 = 5;
+  tempMotor.strength = 0;
+  tempMotor.flag = START;
+  motorPins.push_back(tempMotor);
+
+  for (unsigned i = 0; i < motorPins.size(); i++) {
+    v.push_back(std::thread(setupSoftMotor, i, std::ref(motorPins[i])));
+    delay(500);
+  }
+
+  for (int i = 10; i >= 0; i--) {
+    for (unsigned j = 0; j < motorPins.size(); j++) {
+      motorPins[j].strength = i*10;
+    }
+    delay(1000);
+  }
+
+  for (unsigned i = 0; i <= 10; i++) {
+    for (unsigned j = 0; j < motorPins.size(); j++) {
+      motorPins[j].strength = i*-10;
+    }
+    delay(1000);
+  }
+
+  for (unsigned i = 0; i < motorPins.size(); i++) {
+    motorPins[i].flag = END;
+  }
+  delay(1000);
+
+  for (unsigned i = 0; i < v.size(); i++) {
+    v[i].detach();
+  }
 }
