@@ -1,7 +1,7 @@
 #include "Motor.h"
 
 Motor::Motor(int pinEnable, int pinDirection1, int pinDirection2, pwm type) : \
-	enableDisable(pinEnable), direction1(pinDirection1), direction2(pinDirection2), type(type) {
+	enableDisable(pinEnable), direction1(pinDirection1), direction2(pinDirection2), type(type), pinNum(THREE) {
 		if (type == HARDWARE) {
 			setupHardPwm();
 		} else if (type == SOFTWARE) {
@@ -9,14 +9,21 @@ Motor::Motor(int pinEnable, int pinDirection1, int pinDirection2, pwm type) : \
 		}
 }
 
+Motor::Motor(int pinDirection1, int pinDirection2) : \
+ direction1(pinDirection1), direction2(pinDirection2), type(SOFTWARE), pinNum(TWO) {
+	setupSoftPwm();
+}
+
 void Motor::setupSoftPwm() {
 	wiringPiSetup();
 
-	pinMode(enableDisable, OUTPUT);
+	if (pinNum == THREE) {
+		pinMode(enableDisable, OUTPUT);
+		digitalWrite(enableDisable, HIGH);
+	}
+
 	pinMode(direction1, OUTPUT);
 	pinMode(direction2, OUTPUT);
-
-	digitalWrite(enableDisable, HIGH);
 	int one = softPwmCreate(direction1, 0, 100);
 	int two = softPwmCreate(direction2, 0, 100);
 
@@ -51,21 +58,41 @@ void Motor::hardBackward(int strength) {
 }
 
 void Motor::softForward(int strength) {
-	digitalWrite(enableDisable, HIGH);
+	if (pinNum == THREE) {
+		digitalWrite(enableDisable, HIGH);
+	}
 	softPwmWrite(direction1, strength);
 	softPwmWrite(direction2, 0);
 }
 
 void Motor::softBackward(int strength) {
-	digitalWrite(enableDisable, HIGH);
+	if (pinNum == THREE) {
+		digitalWrite(enableDisable, HIGH);
+	}
 	softPwmWrite(direction1, 0);
 	softPwmWrite(direction2, strength);
 }
 
-void Motor::stop() {
+void Motor::softStop() {
+	if (pinNum == THREE) {
+		digitalWrite(enableDisable, LOW);
+	}
+	softPwmWrite(direction1, 0);
+	softPwmWrite(direction2, 0);
+}
+
+void Motor::hardStop() {
 	digitalWrite(enableDisable, LOW);
 	digitalWrite(direction1, LOW);
 	digitalWrite(direction2, LOW);
+}
+
+void Motor::stop() {
+	if (type == HARDWARE) {
+		hardStop();
+	} else if (type == SOFTWARE) {
+		softStop();
+	}
 }
 
 void Motor::forward(int strength) {
