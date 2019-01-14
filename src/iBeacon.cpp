@@ -3,15 +3,16 @@
 
 #include "iBeacon.h"
 
-iBeacon::iBeacon () : ibeacon_1(0x0), ibeacon_2(0x0), uuid_1(0x0), uuid_2(0x0), \
-                    uuid_3(0x0), uuid_4(0x0), maj(0x0), min(0x0), txPower(0x0) {}
+iBeacon::iBeacon () : \
+        prefix1(0x0), prefix2(0x0), prefix3(0x0), uuid1(0x0), uuid2(0x0), \
+        uuid3(0x0), uuid4(0x0), maj(0x0), min(0x0), txPower(0x0) {}
 
-iBeacon::iBeacon (unsigned long long ibeacon_1, unsigned long long ibeacon_2, \
-        unsigned long long uuid_1, unsigned long long uuid_2, \
-        unsigned long long uuid_3, unsigned long long uuid_4, \
+iBeacon::iBeacon (unsigned long long prefix1, unsigned long long prefix2, unsigned int prefix3, \
+        unsigned long long uuid1, unsigned long long uuid2, \
+        unsigned long long uuid3, unsigned long long uuid4, \
         unsigned long maj, unsigned long min, unsigned long txPower) :
-        ibeacon_1(ibeacon_1), ibeacon_2(ibeacon_2), uuid_1(uuid_1), \
-        uuid_2(uuid_2), uuid_3(uuid_3), uuid_4(uuid_4), maj(maj), \
+        prefix1(prefix1), prefix2(prefix2), prefix3(prefix3), uuid1(uuid1), \
+        uuid2(uuid2), uuid3(uuid3), uuid4(uuid4), maj(maj), \
         min(min), txPower(txPower) {}
 
 unsigned long long hexToDec(std::string hex) {
@@ -65,35 +66,30 @@ void iBeacon::send() {
 }
 
 void iBeacon::extractPacket(std::string packet, std::queue<iBeacon> *packets) {
-  if (packet.length() == 84) {
-    // std::string ibeacon = packet.substr(0, 14);
-    unsigned long long ibeacon_1 = hexToDec(packet.substr(0, 8));
-    unsigned long long ibeacon_2 = hexToDec(packet.substr(8, 6));
-    // std::string notsure = packet.substr(14, 26);
-    unsigned long long ns_1 = hexToDec(packet.substr(14, 8));
-    unsigned long long ns_2 = hexToDec(packet.substr(22, 8));
-    unsigned long long ns_3 = hexToDec(packet.substr(30, 8));
-    unsigned long ns_4 = hexToDec(packet.substr(38, 2));
-    // std::string uuid = packet.substr(40, 32);
-    // unsigned long long uuid = hexToDec(packet.substr(40, 32));
-    unsigned long long uuid_1 = hexToDec(packet.substr(40, 8));
-    unsigned long long uuid_2 = hexToDec(packet.substr(48, 8));
-    unsigned long long uuid_3 = hexToDec(packet.substr(56, 8));
-    unsigned long long uuid_4 = hexToDec(packet.substr(64, 8));
-    // std::string major = packet.substr(72, 4);
-    unsigned long major = hexToDec(packet.substr(72, 4));
-    // std::string minor = packet.substr(76, 4);
-    unsigned long minor = hexToDec(packet.substr(76, 4));
-    // std::string power = packet.substr(80, 2);
-    long txPower = hexToDec(packet.substr(80, 2));
-    if ((txPower & 10000000) == 128) {
+  // temp packet to look for
+  // 043E2A02010300D184BBEB27B8 1E 02011A1AFF4C000215636F3F8F64914BEE95F7D8CC64A863B500000000C8 D0
+  if (packet.length() == 90) {
+    std::string header = packet.substr(0, 28);
+    std::string data = packet.substr(28, packet.length());
+
+    // prefix
+    unsigned int prefix1 = hexToDec(data.substr(0, 8));
+    unsigned int prefix2 = hexToDec(data.substr(8, 8));
+    unsigned int prefix3 = hexToDec(data.substr(16, 2));
+    // uuid
+    unsigned long long uuid1 = hexToDec(data.substr(18, 8));
+    unsigned long long uuid2 = hexToDec(data.substr(26, 8));
+    unsigned long long uuid3 = hexToDec(data.substr(34, 8));
+    unsigned long long uuid4 = hexToDec(data.substr(42, 8));
+
+    unsigned long maj = hexToDec(data.substr(50, 4)); // major
+    unsigned long min = hexToDec(data.substr(54, 4)); // minor
+    int txPower = hexToDec(data.substr(58, 2)); // power
+    if ((txPower & 10000000) == 128) { // convert to negative if necessary
       txPower = twosComp(txPower);
     }
-    // std::string notsure2 = packet.substr(82, 2);
-    unsigned long ns = hexToDec(packet.substr(82, 2));
-
-    iBeacon ibeacon (ibeacon_1, ibeacon_2, uuid_1, uuid_2, uuid_3, uuid_4, \
-                    major, minor, txPower);
+    // create and add iBeacon packet to vector
+    iBeacon ibeacon (prefix1, prefix2, prefix3, uuid1, uuid2, uuid3, uuid4, maj, min, txPower);
     packets->push(ibeacon);
   }
 }

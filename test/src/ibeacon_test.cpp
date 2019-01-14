@@ -49,14 +49,14 @@ void setTestPackets() {
 }
 
 void testIBeacon() {
-  system("sudo /home/pi/shiny-engine/bash/ble_setup.sh");
+  // system("sudo /home/pi/shiny-engine/bash/ble_setup.sh");
   testIBeaconScan();
-  system("sudo /home/pi/shiny-engine/bash/ble_setup.sh");
-  testIBeaconSend();
+  // system("sudo /home/pi/shiny-engine/bash/ble_setup.sh");
+  // testIBeaconSend();
 }
 
 void testIBeaconSend() {
-  // default iBeacon
+/*  // default iBeacon
   iBeacon def;
   def.send();
   usleep(sleepTime);
@@ -69,6 +69,7 @@ void testIBeaconSend() {
     ndef.send();
     usleep(sleepTime);
   }
+  */
 }
 
 void testIBeaconScan() {

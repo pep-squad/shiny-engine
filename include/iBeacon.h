@@ -2,6 +2,7 @@
 #define __IBEACON_H__
 
 #include <cstdio>
+#include <string>
 #include <iostream>
 #include <unistd.h>
 #include <fstream>
@@ -41,10 +42,10 @@ private:
   // unsigned int companyID;
   // unsigned int iBeaconType;
   // unsigned int iBeaconLength;
-  unsigned long long ibeacon_1, ibeacon_2;
-  unsigned long long uuid_1, uuid_2, uuid_3, uuid_4;
-  unsigned long maj;
-  unsigned long min;
+  unsigned long long prefix1, prefix2;
+  unsigned int prefix3;
+  unsigned long long uuid1, uuid2, uuid3, uuid4;
+  unsigned long maj, min;
   long txPower;
   void extractPacket(std::string packet, std::queue<iBeacon> *packets);
 protected:
@@ -59,10 +60,12 @@ protected:
   void setMinor(unsigned int minor);
   void setTxPower(unsigned int txPower);
 public:
+  // general iBeacon class, used for scanning
   iBeacon ();
-  iBeacon (unsigned long long ibeacon_1, unsigned long long ibeacon_2, \
-          unsigned long long uuid_1, unsigned long long uuid_2, \
-          unsigned long long uuid_3, unsigned long long uuid_4, \
+  // iBeacon packet
+  iBeacon (unsigned long long prefix1, unsigned long long prefix2, unsigned int prefix3, \
+          unsigned long long uuid1, unsigned long long uuid2, \
+          unsigned long long uuid3, unsigned long long uuid4, \
           unsigned long maj, unsigned long minor, unsigned long txPower);
   std::queue<iBeacon> packets;
   void scan();
