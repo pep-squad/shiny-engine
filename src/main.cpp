@@ -2,7 +2,9 @@
 #include <iostream>
 #include <unistd.h>
 
-#include "iBeacon.h"
+#include "BLE.h"
+#include "HCSR04.h"
+#include "Motor.h"
 
 int main () {
   return 0;
