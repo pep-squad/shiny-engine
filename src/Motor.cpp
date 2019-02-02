@@ -1,7 +1,7 @@
 #include "Motor.h"
 
 Motor::Motor(int pinEnable, int pinDirection1, int pinDirection2, pwm type) : \
-	enableDisable(pinEnable), direction1(pinDirection1), direction2(pinDirection2), type(type), pinNum(THREE) {
+	enableDisable(pinEnable), direction1(pinDirection1), direction2(pinDirection2), type(type), pinNum(THREE), encType(OFF) {
 		if (type == HARDWARE) {
 			setupHardPwm();
 		} else if (type == SOFTWARE) {
@@ -10,8 +10,13 @@ Motor::Motor(int pinEnable, int pinDirection1, int pinDirection2, pwm type) : \
 }
 
 Motor::Motor(int pinDirection1, int pinDirection2) : \
- direction1(pinDirection1), direction2(pinDirection2), type(SOFTWARE), pinNum(TWO) {
+ direction1(pinDirection1), direction2(pinDirection2), type(SOFTWARE), pinNum(TWO), encType(OFF) {
 	setupSoftPwm();
+}
+
+Motor::Motor(int pinDirection1, int pinDirection2, int encoderA, int encoderB) : \
+ direction1(pinDirection1), direction2(pinDirection2), type(SOFTWARE), encoderA(encoderA), encoderB(encoderB), pinNum(TWO), encType(ON) {
+	setupSoftPwmEncoder();
 }
 
 void Motor::setupSoftPwm() {
@@ -24,6 +29,28 @@ void Motor::setupSoftPwm() {
 
 	pinMode(direction1, OUTPUT);
 	pinMode(direction2, OUTPUT);
+	int one = softPwmCreate(direction1, 0, 100);
+	int two = softPwmCreate(direction2, 0, 100);
+
+	if (one != 0 || two != 0) {
+		printf("ERROR\n");
+		// return an error code
+	}
+}
+
+void Motor::setupSoftPwmEncoder() {
+	wiringPiSetup();
+
+	if (pinNum == THREE) {
+		pinMode(enableDisable, OUTPUT);
+		digitalWrite(enableDisable, HIGH);
+	}
+
+	pinMode(direction1, OUTPUT);
+	pinMode(direction2, OUTPUT);
+	pinMode(encoderA, INPUT);
+	pinMode(encoderB, INPUT);
+
 	int one = softPwmCreate(direction1, 0, 100);
 	int two = softPwmCreate(direction2, 0, 100);
 
@@ -109,4 +136,18 @@ void Motor::backward(int strength) {
 	} else if (type == SOFTWARE) {
 		softBackward(strength);
 	}
+}
+
+int Motor::getEncoderA() {
+	if (encType == ON) {
+		return digitalRead(encoderA);
+	}
+	return -1;
+}
+
+int Motor::getEncoderB() {
+	if (encType == ON) {
+		return digitalRead(encoderB);
+	}
+	return -1;
 }
