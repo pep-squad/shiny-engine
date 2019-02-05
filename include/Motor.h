@@ -28,8 +28,9 @@ private:
   pwm type;
   pins pinNum;
   Encoder encType;
+  int newA, newB, oldA, oldB, count;
+  float rpm;
 protected:
-  void setupSoftPwm();
   void setupSoftPwmEncoder();
   void setupHardPwm();
   void hardForward(int strength);
@@ -45,8 +46,29 @@ public:
   void forward(int strength);
   void backward(int strength);
   void stop();
+  void encoderStage(int encVal);
+  void setupSoftPwm();
+
+  void setOldA(int val);
+  void setOldB(int val);
+  void setNewA(int val);
+  void setNewB(int val);
+  void setCount(int val);
+  void setRpm(float val);
+
+  void setDirection1(int pin);
+  void setDirection2(int pin);
+  void setEncoderA(int pin);
+  void setEncoderB(int pin);
+
   int getEncoderA();
   int getEncoderB();
+  int getOldA();
+  int getOldB();
+  int getNewA();
+  int getNewB();
+  int getCount();
+  float getRpm();
 };
 
 #endif

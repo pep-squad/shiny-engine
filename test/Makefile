@@ -12,8 +12,8 @@ SRC = src
 BIN2 = ../bin
 SRC2 = ../src
 all: motor hcsr04 communications
-motor: $(BIN)/motor_test.o
-	sudo $(CC) $(FLAGS) $(SRC)/motor_main.cpp -o $(BIN)/motor $(BIN)/motor_test.o $(BIN2)/Motor.o $(INCLUDES) $(LIBRARIES)
+motor: $(SRC)/motor_main.cpp $(BIN2)/Motor.o
+	sudo $(CC) $(FLAGS) $(SRC)/motor_main.cpp -o $(BIN)/motor $(BIN2)/Motor.o $(INCLUDES) $(LIBRARIES)
 hcsr04: $(BIN)/hcsr04_test.o
 	sudo $(CC) $(FLAGS) $(SRC)/hcsr04_main.cpp -o $(BIN)/object $(BIN)/hcsr04_test.o $(BIN2)/HCSR04.o $(INCLUDES) $(LIBRARIES)
 communications: $(BIN)/ble_test.o $(BIN)/serial_number.o
@@ -21,8 +21,6 @@ communications: $(BIN)/ble_test.o $(BIN)/serial_number.o
 $(BIN)/hcsr04_test.o: $(SRC)/hcsr04_test.cpp $(BIN2)/HCSR04.o
 	sudo $(CC) $(FLAGS) -c -o $@ $< $(INCLUDES) $(LIBRARIES)
 $(BIN)/ble_test.o: $(SRC)/ble_test.cpp $(BIN2)/BLE.o
-	sudo $(CC) $(FLAGS) -c -o $@ $< $(INCLUDES) $(LIBRARIES)
-$(BIN)/motor_test.o: $(SRC)/motor_test.cpp $(BIN2)/Motor.o
 	sudo $(CC) $(FLAGS) -c -o $@ $< $(INCLUDES) $(LIBRARIES)
 $(BIN)/serial_number.o: $(SRC)/serial_number.cpp
 	sudo $(CC) $(FLAGS) -c -o $@ $< $(INCLUDES) $(LIBRARIES)
