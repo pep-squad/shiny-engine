@@ -37,4 +37,4 @@ $(BIN2)/Motor.o: $(SRC2)/Motor.cpp
 $(BIN2)/TCS3200.o: $(SRC2)/TCS3200.cpp
 	sudo $(CC) $(FLAGS) -c -o $@ $< $(INCLUDES) $(LIBRARIES)
 clean:
-	sudo rm -rf $(BIN)/*.o $(BIN)/motor $(BIN)/object $(BIN)/comm
+	sudo rm -rf $(BIN)/*.o $(BIN)/motor $(BIN)/object $(BIN)/comm $(BIN)/rgb
