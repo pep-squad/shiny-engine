@@ -1,7 +1,7 @@
 # compiler
 CC = g++
 # flags
-FLAGS = -Wall -Wno-psabi
+FLAGS = -Wall -Wno-psabi -g
 # includes folder
 INCLUDES = -Iinclude
 # libraries
