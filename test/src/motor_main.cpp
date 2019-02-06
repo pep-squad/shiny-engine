@@ -14,6 +14,37 @@ typedef struct MotorPinLayout {
   int strength, count, rpm;
 } MotorPins;
 
+typedef struct DesiredRpmValues {
+  float motor1, motor2, motor3, motor4;
+} DesiredRpm;
+
+int motorSpeed (float Wz, float Vx, float Vy, std::vector<float> &desired_rpm) {
+
+    float Vb[3] = {Wz, Vx, Vy};
+    int idx = 0;
+    int flag = 0;
+
+
+    desired_rpm[0] = (2.9189*Vb[0] - 0.0171*Vb[1] + 0.0171*Vb[2])*9.5495;
+    desired_rpm[1] = (2.9189*Vb[0] - 0.0171*Vb[1] - 0.0171*Vb[2])*9.5495;
+    desired_rpm[2] = (2.9189*Vb[0] + 0.0171*Vb[1] - 0.0171*Vb[2])*9.5495;
+    desired_rpm[3] = (2.9189*Vb[0] + 0.0171*Vb[1] + 0.0171*Vb[2])*9.5495;
+
+	//catch any rpm's that the motor will not be able to output
+	for (idx = 0; idx < 4; idx++) {
+		if (desired_rpm[idx] > 110) {
+			desired_rpm[idx] = 110;
+			flag = 1;
+	        }
+	}
+
+	if (flag == 1) {
+		return 0; //check for return in main code for rejected motor setpoint
+	}
+
+	return 1;  //all good setpoints
+}
+
 void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor> &motors) {
   for (unsigned i = 0; i < motors.size(); i++) {
     motors[i].setOldA(motors[i].getEncoderA());
@@ -38,17 +69,24 @@ void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor
       motors[i].setOldB(motors[i].getNewB());
     }
     rpm_time = std::chrono::duration_cast<std::chrono::milliseconds>(finish - deltaT).count();
-    if (rpm_time > 100) {
+    if (rpm_time > 10) {
       for (unsigned i = 0; i < 4; i++) {
         float rpm = motors[i].getCount()/(rpm_time/1000 * scale)*60;
         motors[i].setRpm(rpm);
         motors[i].setCount(0);
         if (rpm > motorPins[i].rpm) {
-          motorPins[i].strength--;
+          if ((rpm-5) > motorPins[i].rpm) {
+	      motorPins[i].strength -= 2;
+	  } else {
+              motorPins[i].strength--;
+	  }
         }
         else if(rpm < motorPins[i].rpm) {
-          motorPins[i].strength++;
-          motors[i].forward(motorPins[i].strength);
+            if ((rpm+5) < motorPins[i].rpm) {
+	        motorPins[i].strength += 2;
+	    } else {
+                motorPins[i].strength++;
+	    }
         }
         if (motorPins[i].strength > 0 ) {
           motors[i].forward(motorPins[i].strength);
@@ -83,12 +121,12 @@ int main() {
   bool end = false;
   //motor1 1 setup
   MotorPins motorPin1;
-  motorPin1.direction1 = 5;
-  motorPin1.direction2 = 4;
+  motorPin1.direction1 = 4;
+  motorPin1.direction2 = 5;
   motorPin1.strength = 0;
-  motorPin1.encoderA = 26;
-  motorPin1.encoderB = 6;
-  motorPin1.rpm = -40;
+  motorPin1.encoderA = 6;
+  motorPin1.encoderB = 26;
+  motorPin1.rpm = 0;
   motorPin1.strength = 0;
   motorPins.push_back(motorPin1);
 
@@ -99,7 +137,7 @@ int main() {
   motorPin2.strength = 0;
   motorPin2.encoderA = 25;
   motorPin2.encoderB = 29;
-  motorPin2.rpm = -40;
+  motorPin2.rpm = 0;
   motorPin2.strength = 0;
   motorPins.push_back(motorPin2);
 
@@ -110,18 +148,18 @@ int main() {
   motorPin3.strength = 0;
   motorPin3.encoderA = 24;
   motorPin3.encoderB = 23;
-  motorPin3.rpm = -40;
+  motorPin3.rpm = 0;
   motorPin3.strength = 0;
   motorPins.push_back(motorPin3);
 
   //Motor 4 direction pins
   MotorPins motorPin4;
-  motorPin4.direction1 = 0;
-  motorPin4.direction2 = 7;
+  motorPin4.direction1 = 7;
+  motorPin4.direction2 = 0;
   motorPin4.strength = 0;
-  motorPin4.encoderA = 3;
-  motorPin4.encoderB = 2;
-  motorPin4.rpm = -40;
+  motorPin4.encoderA = 2;
+  motorPin4.encoderB = 3;
+  motorPin4.rpm = 0;
   motorPin4.strength = 0;
   motorPins.push_back(motorPin4);
 
@@ -130,16 +168,53 @@ int main() {
     motors.emplace_back(motorPins[i].direction1, motorPins[i].direction2, motorPins[i].encoderA, motorPins[i].encoderB);
   }
 
+  std::vector<float> desired_rpm;
+  desired_rpm.push_back(0.0);
+  desired_rpm.push_back(0.0);
+  desired_rpm.push_back(0.0);
+  desired_rpm.push_back(0.0);
   t = std::thread(motorThread, std::ref(end), std::ref(motorPins), std::ref(motors));
-  delay(5000);
+  motorSpeed(0, 0, 200, std::ref(desired_rpm));
   for (unsigned i = 0; i < motors.size(); i++) {
-    motorPins[i].rpm = 0;
+    motorPins[i].rpm = desired_rpm[i];
   }
-  delay(2000);
+  delay(3000);
+  motorSpeed(-0.785, 0, 100, std::ref(desired_rpm));
   for (unsigned i = 0; i < motors.size(); i++) {
-    motorPins[i].rpm = 50;
+    motorPins[i].rpm = desired_rpm[i];
   }
-  delay(5000);
+  delay(2100);
+  motorSpeed(0, 0, 200, std::ref(desired_rpm));
+  for (unsigned i = 0; i < motors.size(); i++) {
+    motorPins[i].rpm = desired_rpm[i];
+  }
+  delay(3000);
+  motorSpeed(-0.785, 0, 100, std::ref(desired_rpm));
+  for (unsigned i = 0; i < motors.size(); i++) {
+    motorPins[i].rpm = desired_rpm[i];
+  }
+  delay(2100);
+  motorSpeed(0, 0, 200, std::ref(desired_rpm));
+  for (unsigned i = 0; i < motors.size(); i++) {
+    motorPins[i].rpm = desired_rpm[i];
+  }
+  delay(3000);
+  motorSpeed(-0.785, 0, 100, std::ref(desired_rpm));
+  for (unsigned i = 0; i < motors.size(); i++) {
+    motorPins[i].rpm = desired_rpm[i];
+  }
+  delay(2100);
+  motorSpeed(0, 0, 200, std::ref(desired_rpm));
+  for (unsigned i = 0; i < motors.size(); i++) {
+    motorPins[i].rpm = desired_rpm[i];
+  }
+  delay(3000);
+  motorSpeed(-0.785, 0, 100, std::ref(desired_rpm));
+  for (unsigned i = 0; i < motors.size(); i++) {
+    motorPins[i].rpm = desired_rpm[i];
+  }
+  delay(2100);
+
   end = true;
   delay(1000);
 
