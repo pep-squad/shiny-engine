@@ -10,14 +10,31 @@ long map(long x, long in_min, long in_max, long out_min, long out_max) {
 }
 
 int main(int argc, char const *argv[]) {
-  // TCS3200 rgb(12,13,14);
-  // rgb.calibrate();
-  // delay(5000);
-  // for (size_t i = 0; true; i++) {
-  //   RGB a = rgb.scan();
-  //   std::cout << a.red << ":" << a.green << ":" << a.blue << std::endl;
-  // }
-
+  TCS3200 rgb(12,13,14);
+  while (true) {
+    Colour colour = rgb.scan();
+    switch (colour) {
+      case RED:
+        std::cout << "RED\n";
+        break;
+      case GREEN:
+        std::cout << "GREEN\n";
+        break;
+      case BLUE:
+        std::cout << "BLUE\n";
+        break;
+      case YELLOW:
+        std::cout << "YELLOW\n";
+        break;
+      case WHITE:
+        std::cout << "WHITE\n";
+        break;
+      default:
+        std::cout << "BLACK\n";
+        break;
+    }
+  }
+/*
   int s3 = 12;
   int s4 = 13;
   int out = 14;
@@ -27,20 +44,8 @@ int main(int argc, char const *argv[]) {
   pinMode(out, INPUT);
   auto begin = std::chrono::high_resolution_clock::now();
   auto finish = begin;
-  /*bool startFlag = true;
-  int redL = 0;
-  int redH = 0;
-  int greenL = 0;
-  int greenH = 0;
-  int blueL = 0;
-  int blueH = 0;*/
-  int color = -1;
-  long rt = 0;
-  long gt = 0;
-  long bt = 0;
-  long cnt = 0;
   while (std::chrono::duration_cast<std::chrono::milliseconds>(finish-begin).count() < 30000) {
-    /* RED */
+    // RED
     digitalWrite(s3, LOW);
     digitalWrite(s4, LOW);
     delay(10);
@@ -56,7 +61,7 @@ int main(int argc, char const *argv[]) {
       duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
     }
 
-    /* GREEN */
+    // GREEN
     digitalWrite(s3, HIGH);
     digitalWrite(s4, HIGH);
     delay(10);
@@ -72,7 +77,7 @@ int main(int argc, char const *argv[]) {
       duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
     }
 
-    /* BLUE */
+    // BLUE
     digitalWrite(s3, LOW);
     digitalWrite(s4, HIGH);
     delay(10);
@@ -102,31 +107,8 @@ int main(int argc, char const *argv[]) {
     } else {
         std::cout << "Black\n";
     }
-
-/*
-    if (tempColor != color) {
-      switch (color) {
-        case 0:
-          std::cout << "Red\n";
-          break;
-        case 1:
-          std::cout << "Green\n";
-          break;
-        case 2:
-          std::cout << "Blue\n";
-          break;
-        case 3:
-          std::cout << "Yellow\n";
-          break;
-        case 4:
-          std::cout << "White\n";
-          break;
-        default:
-          break;
-      }
-    }
-*/
-     std::cout << redCnt << ":" << blueCnt << ":" << greenCnt << std::endl;
+    std::cout << redCnt << ":" << blueCnt << ":" << greenCnt << std::endl;
     // finish = std::chrono::high_resolution_clock::now();
   }
+ */
 }

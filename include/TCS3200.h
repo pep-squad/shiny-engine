@@ -25,6 +25,14 @@
 |   HIGH  |    HIGH   |     Green   |
 *************************************/
 
+typedef enum colourEnum {
+  RED,
+  BLUE,
+  GREEN,
+  YELLOW,
+  WHITE,
+  BLACK
+} Colour;
 
 typedef struct rgb {
   int red, green, blue;
@@ -32,33 +40,18 @@ typedef struct rgb {
 
 class TCS3200 {
 private:
-  #define  RED_HIGH    1411396
-  #define  RED_LOW     96296
-  #define  GREEN_HIGH  2682865
-  #define  GREEN_LOW   94478
-  #define  BLUE_HIGH   2031334
-  #define  BLUE_LOW    343382
-  int redHigh, redLow, greenHigh, greenLow, blueHigh, blueLow;
+  RGB yellow = { 95, 90, 90 };
+  RGB red = { 80, 75, 60 };
+  RGB green = { 60, 70, 82 };
+  RGB white = { 100, 110, 155 };
+  RGB blue = { 52, 60, 87 };
   int s3, s4, out;
-  void setRedHigh(int high);
-  void setRedLow(int low);
-  void setGreenHigh(int high);
-  void setGreenLow(int low);
-  void setBlueHigh(int high);
-  void setBlueLow(int low);
 protected:
-  /* map taken from the Math library in Arduino : https://www.arduino.cc/reference/en/language/functions/math/map/ */
-  long map(long x, long in_min, long in_max, long out_min, long out_max);
-  int getRed();
-  int getGreen();
-  int getBlue();
-  void calibrateRed();
-  void calibrateGreen();
-  void calibrateBlue();
+  int getCount(int modeOne, int modeTwo);
+  Colour getColour(RGB rgb);
 public:
   TCS3200(int s3, int s4, int out);
-  RGB scan();
-  void calibrate();
+  Colour scan();
 };
 
 #endif
