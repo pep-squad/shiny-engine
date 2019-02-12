@@ -45,6 +45,7 @@ BLE::BLE (unsigned long long prefix1, unsigned long long prefix2, unsigned int p
           header = p1;
           header.append(p2);
           header.append(p3);
+	  std::cout << header << std::endl;
         }
 
 unsigned long long hexToDec(std::string hex) {
@@ -133,49 +134,51 @@ void BLE::send() {
 }
 
 void BLE::scan() {
-  // pipes for parent to write and read
-  pipe(pipes[PARENT_READ_PIPE]);
-  pipe(pipes[PARENT_WRITE_PIPE]);
-
-  pid_t pid  = fork();
-  if(pid > 0) {
-    // child process
-    dup2(CHILD_READ_FD, STDIN_FILENO);
-    dup2(CHILD_WRITE_FD, STDOUT_FILENO);
-
-    // close fds not required by child
-    close(CHILD_READ_FD);
-    close(CHILD_WRITE_FD);
-    close(PARENT_READ_FD);
-    close(PARENT_WRITE_FD);
-
-    // execute the bash script to read ble packets
-    execl("/bin/bash","bash","/home/pi/shiny-engine/bash/ble_scan.sh", NULL); // change to some common place later (/usr/bin)
-  } else if (pid == 0) {
-    // parent process
-    char buffer[200];
-    int count;
-
-    // close fds not required by parent
-    close(CHILD_READ_FD);
-    close(CHILD_WRITE_FD);
-
-    // Write to child’s stdin
-    write(PARENT_WRITE_FD, "2^32\n", 5);
-
-    // Read from child’s stdout
-    while((count = read(PARENT_READ_FD, buffer, sizeof(buffer)-1)) > 0) {
-      buffer[count] = 0; // get rid of bad data at end
-      // buffer[count-1] = '\0'; // get rid of newline
-      extractBuffer(buffer);
+  //system("sudo hcitool lescan --duplicates > /home/pi/a.txt &");
+  //system("sudo hcidump --raw > /home/pi/b.txt &");
+  //while (1) {
+    std::ifstream ff;
+    ff.open("/home/pi/b.txt");
+    std::string out;
+    std::string output = "";
+    if (ff.is_open()) {
+      while (!ff.eof()) {
+        ff >> out;
+	output.append(out);
+	//std::cout << output;
+      }
+      extractPacket(output);
     }
-  }
+    ff.close();
+    std::ofstream acf ("/home/pi/a.txt", std::ios_base::trunc);
+    std::ofstream bcf ("/home/pi/b.txt", std::ios_base::trunc);
+    acf.close();
+    bcf.close();
+  //} 
+}
+
+void BLE::extractPacket(std::string packet) {
+    if (packet.length() > 0) {
+        std::string buffer = "";
+	bool start = false;
+        for(unsigned i = 0; i < packet.length(); i++) {
+	    if (!start && packet[i] == '>') {
+	        start = true;
+	    } else if (start && packet[i] == '>') {
+		//std::cout << y << std::endl;
+		extractBuffer(buffer);
+	        buffer = "";
+	    } else if (start) {
+	        buffer += packet[i];
+	    }
+	}
+    }
 }
 
 void BLE::extractBuffer(std::string buffer) {
-  buffer.erase(remove_if(buffer.begin(), buffer.end(), isspace), buffer.end());
-  if (buffer[0] == '>') {
-    buffer = buffer.substr(1, buffer.length());
+  //buffer.erase(remove_if(buffer.begin(), buffer.end(), isspace), buffer.end());
+  //if (buffer[0] == '>') {
+    //buffer = buffer.substr(1, buffer.length());
     // packets->push(buffer);
     if (buffer.length() != 90) { return; }
     std::transform(buffer.begin(), buffer.end(), buffer.begin(), ::tolower);
@@ -201,10 +204,11 @@ void BLE::extractBuffer(std::string buffer) {
         txPower = twosComp(txPower);
       }
       // create and add iBeacon packet and add to packets list
-      BLE ble (prefix1, prefix2, prefix3, uuid1, uuid2, uuid3, uuid4, maj, min, txPower);
-      packets.push(ble);
+      //BLE ble (prefix1, prefix2, prefix3, uuid1, uuid2, uuid3, uuid4, maj, min, txPower);
+      std::cout << buffer << std::endl;
+      //packets.push(ble);
     }
-  }
+  //}
 }
 
 unsigned long long BLE::getPrefix1() {
@@ -233,4 +237,11 @@ unsigned long BLE::getMinor() {
 }
 long BLE::getTxPower() {
   return txPower;
+}
+
+void BLE::setMinor(unsigned long minor) {
+   min = minor;
+}
+void BLE::setMajor(unsigned long major) {
+   maj = major;
 }

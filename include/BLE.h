@@ -19,6 +19,7 @@ private:
   unsigned long maj, min;
   long txPower;
   std::string header;
+  void extractPacket(std::string buffer);
   void extractBuffer(std::string buffer);
 protected:
   // Set the packet structure
@@ -67,7 +68,8 @@ public:
   unsigned long getMajor();
   unsigned long getMinor();
   long getTxPower();
-
+  void setMinor(unsigned long major);
+  void setMajor(unsigned long minor);
 };
 
 #endif
