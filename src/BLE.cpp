@@ -45,7 +45,6 @@ BLE::BLE (unsigned long long prefix1, unsigned long long prefix2, unsigned int p
           header = p1;
           header.append(p2);
           header.append(p3);
-	  std::cout << header << std::endl;
         }
 
 unsigned long long hexToDec(std::string hex) {
@@ -134,45 +133,58 @@ void BLE::send() {
 }
 
 void BLE::scan() {
-  //system("sudo hcitool lescan --duplicates > /home/pi/a.txt &");
-  //system("sudo hcidump --raw > /home/pi/b.txt &");
-  //while (1) {
-    std::ifstream ff;
-    ff.open("/home/pi/b.txt");
-    std::string out;
-    std::string output = "";
-    if (ff.is_open()) {
-      while (!ff.eof()) {
-        ff >> out;
-	output.append(out);
-	//std::cout << output;
+  system("sudo hcitool lescan --duplicates > /home/pi/shiny-engine/a.txt &");
+  system("sudo hcidump --raw > /home/pi/shiny-engine/b.txt &");
+  unsigned long cnt = 0;
+  auto start = std::chrono::high_resolution_clock::now();
+  auto end = start;
+  while (true) {
+    std::ifstream ff("/home/pi/shiny-engine/b.txt");
+    char c;
+    std::string str = "";
+    unsigned long tCnt = 0;
+    while (ff.get(c)) {
+      if (c > 0 && tCnt >= cnt) {
+        str += c;
+        tCnt++;
       }
-      extractPacket(output);
     }
+    cnt = tCnt;
+    extractPacket(str);
     ff.close();
-    std::ofstream acf ("/home/pi/a.txt", std::ios_base::trunc);
-    std::ofstream bcf ("/home/pi/b.txt", std::ios_base::trunc);
-    acf.close();
-    bcf.close();
-  //} 
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() > 5000) {
+      std::ofstream acf ("/home/pi/shiny-engine/a.txt", std::ios_base::trunc);
+      std::ofstream bcf ("/home/pi/shiny-engine/b.txt", std::ios_base::trunc);
+      acf.close();
+      bcf.close();
+      start = end;
+      cnt = 0;
+    }
+    end = std::chrono::high_resolution_clock::now();
+  }
 }
 
 void BLE::extractPacket(std::string packet) {
-    if (packet.length() > 0) {
-        std::string buffer = "";
-	bool start = false;
-        for(unsigned i = 0; i < packet.length(); i++) {
-	    if (!start && packet[i] == '>') {
-	        start = true;
-	    } else if (start && packet[i] == '>') {
-		//std::cout << y << std::endl;
-		extractBuffer(buffer);
-	        buffer = "";
-	    } else if (start) {
-	        buffer += packet[i];
-	    }
-	}
+  if (packet.length() > 0) {
+    std::string buffer = "";
+    bool start = false;
+    for (unsigned i = 0; i < packet.length(); i++) {
+      if (!start) {
+        if (packet[i] == '>') {
+          start = true;
+        }
+      } else {
+        if (packet[i] == '>') {
+          extractBuffer(buffer);
+          buffer = "";
+        } else {
+          if ((packet[i] >= 48 && packet[i] <= 57) || (packet[i] >= 65 && packet[i] <= 70) || (packet[i] >= 97 && packet[i] <= 102)) {
+            buffer += packet[i];
+          }
+        }
+      }
     }
+  }
 }
 
 void BLE::extractBuffer(std::string buffer) {
@@ -184,8 +196,7 @@ void BLE::extractBuffer(std::string buffer) {
     std::transform(buffer.begin(), buffer.end(), buffer.begin(), ::tolower);
     std::string currHeader = buffer.substr(26, 20);
     // only add to iBeacons if the headers are the same
-    if (header.compare(currHeader)) { return; }
-    {
+    if (header.compare(currHeader) == 0) {
       std::string data = buffer.substr(46, buffer.length());
       // prefix
       unsigned int prefix1 = hexToDec(header.substr(0, 8));
@@ -204,9 +215,8 @@ void BLE::extractBuffer(std::string buffer) {
         txPower = twosComp(txPower);
       }
       // create and add iBeacon packet and add to packets list
-      //BLE ble (prefix1, prefix2, prefix3, uuid1, uuid2, uuid3, uuid4, maj, min, txPower);
-      std::cout << buffer << std::endl;
-      //packets.push(ble);
+      BLE ble (prefix1, prefix2, prefix3, uuid1, uuid2, uuid3, uuid4, maj, min, txPower);
+      packets.push(ble);
     }
   //}
 }
