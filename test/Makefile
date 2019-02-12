@@ -11,24 +11,16 @@ BIN = bin
 SRC = src
 BIN2 = ../bin
 SRC2 = ../src
-# <<<<<<< HEAD
-all: motor hcsr04 communications rgb
-# motor: $(BIN)/motor_test.o
-# 	sudo $(CC) $(FLAGS) $(SRC)/motor_main.cpp -o $(BIN)/motor $(BIN)/motor_test.o $(BIN2)/Motor.o $(INCLUDES) $(LIBRARIES)
-# =======
-# all: motor hcsr04 communications
+all: motor hcsr04 comms rgb
 motor: $(SRC)/motor_main.cpp $(BIN2)/Motor.o
 	sudo $(CC) $(FLAGS) $(SRC)/motor_main.cpp -o $(BIN)/motor $(BIN2)/Motor.o $(INCLUDES) $(LIBRARIES)
-# >>>>>>> motor-branch
 hcsr04: $(BIN)/hcsr04_test.o
 	sudo $(CC) $(FLAGS) $(SRC)/hcsr04_main.cpp -o $(BIN)/object $(BIN)/hcsr04_test.o $(BIN2)/HCSR04.o $(INCLUDES) $(LIBRARIES)
-communications: $(BIN)/ble_test.o $(BIN)/serial_number.o
-	sudo $(CC) $(FLAGS) $(SRC)/comm_main.cpp -o $(BIN)/comm $(BIN)/ble_test.o $(BIN)/serial_number.o $(BIN2)/BLE.o $(INCLUDES) $(LIBRARIES)
+comms: $(BIN)/serial_number.o
+	sudo $(CC) $(FLAGS) $(SRC)/comm_main.cpp -o $(BIN)/comms $(BIN)/serial_number.o $(BIN2)/BLE.o $(INCLUDES) $(LIBRARIES)
 rgb: $(BIN2)/TCS3200.o
 	sudo $(CC) $(FLAGS) $(SRC)/tcs3200_test.cpp -o $(BIN)/rgb $(BIN2)/TCS3200.o $(INCLUDES) $(LIBRARIES)
 $(BIN)/hcsr04_test.o: $(SRC)/hcsr04_test.cpp $(BIN2)/HCSR04.o
-	sudo $(CC) $(FLAGS) -c -o $@ $< $(INCLUDES) $(LIBRARIES)
-$(BIN)/ble_test.o: $(SRC)/ble_test.cpp $(BIN2)/BLE.o
 	sudo $(CC) $(FLAGS) -c -o $@ $< $(INCLUDES) $(LIBRARIES)
 $(BIN)/serial_number.o: $(SRC)/serial_number.cpp
 	sudo $(CC) $(FLAGS) -c -o $@ $< $(INCLUDES) $(LIBRARIES)
@@ -41,4 +33,4 @@ $(BIN2)/Motor.o: $(SRC2)/Motor.cpp
 $(BIN2)/TCS3200.o: $(SRC2)/TCS3200.cpp
 	sudo $(CC) $(FLAGS) -c -o $@ $< $(INCLUDES) $(LIBRARIES)
 clean:
-	sudo rm -rf $(BIN)/*.o $(BIN)/motor $(BIN)/object $(BIN)/comm $(BIN)/rgb
+	sudo rm -rf $(BIN)/*.o $(BIN)/motor $(BIN)/object $(BIN)/comms $(BIN)/rgb
