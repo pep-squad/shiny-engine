@@ -183,9 +183,6 @@ int main() {
     motors.emplace_back(motorPins[i].direction1, motorPins[i].direction2, motorPins[i].encoderA, motorPins[i].encoderB);
   }
 
-  // setup the ultrasonic sensor to measure distance
-  // v = std::thread(hcsr04Scan, std::ref(ultra), std::ref(d));
-
   // setup all motors
   std::vector<float> desired_rpm;
   desired_rpm.push_back(0.0);
@@ -199,28 +196,28 @@ int main() {
   actual_rpm.push_back(0.0);
   t = std::thread(motorThread, std::ref(end), std::ref(motorPins), std::ref(motors));
 
-
-
-  // motorSpeed(0, 0, 200, std::ref(actual_rpm));
   motorSpeed(0, 0, 200, std::ref(desired_rpm));
   actual_rpm = desired_rpm;
-  // for (unsigned i = 0; i < motors.size(); i++) {
-  //   motorPins[i].rpm = desired_rpm[i];
-  // }
   int count = 0;
   while (count < 500) {
     float dist = ultra.distance();
     if (dist < MINIMUM_DISTANCE) {
         // decrease the speed if getting closer
         for (unsigned i = 0; i < desired_rpm.size(); i++) {
-          if (desired_rpm[i] > 0 && actual_rpm[i] > 0) {
-            actual_rpm[i] -= 2;
-          } else if (desired_rpm[i] < 0 && actual_rpm[i] < 0) {
-            actual_rpm[i] += 2;
+          if (desired_rpm[i] > 0) {
+            if ((actual_rpm[i]-2 > 0)) {
+              actual_rpm[i] -= 2;
+            } else {
+              actual_rpm[i] = 0;
+            }
+          } else if (desired_rpm[i] < 0) {
+            if ((actual_rpm[i]+2) < 0) {
+              actual_rpm[i] += 2;
+            } else {
+              actual_rpm[i] = 0;
+            }
           }
-          std::cout << i << " : " << actual_rpm[i] << " ";
         }
-        std::cout << std::endl;
       // }
     } else {
       actual_rpm = desired_rpm;
@@ -231,14 +228,6 @@ int main() {
     count++;
     delay(10);
   }
-/*
-  // go forwards
-  motorSpeed(0, 0, 200, std::ref(desired_rpm));
-  for (unsigned i = 0; i < motors.size(); i++) {
-    motorPins[i].rpm = desired_rpm[i];
-  }
-  delay(3000);
-*/
   // stop all of the motors before ending the program
   end = true;
   delay(1000);
