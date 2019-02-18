@@ -1,6 +1,15 @@
-#include "hcsr04_test.h"
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <thread>
+#include <vector>
 
-// std::vector<GPIO> pins;
+#include "HCSR04.h"
+
+typedef struct HCSR04GPIOPin {
+  int trig;
+  int echo;
+} GPIO;
 
 void *hcsr04Scan(int threadid, std::vector<GPIO> pins, std::vector<std::vector<float>> &dist) {
   HCSR04 d (pins[(int)threadid].trig, pins[(int)threadid].echo);
@@ -52,4 +61,9 @@ void testHCSR04() {
     // std::cout << std::endl << std::endl;
     // delay(1000);
   }
+}
+
+int main() {
+    testHCSR04();
+    return 0;
 }
