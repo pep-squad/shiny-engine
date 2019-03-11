@@ -218,10 +218,10 @@ int main() {
 
   //Motor 2 direction pins
   MotorPins motorPin2;
-  motorPin2.direction1 = 28;
-  motorPin2.direction2 = 27;
-  motorPin2.encoderA = 25;
-  motorPin2.encoderB = 29;
+  motorPin2.direction1 = 27;
+  motorPin2.direction2 = 28;
+  motorPin2.encoderA = 29;
+  motorPin2.encoderB = 25;
   motorPin2.rpm = 0;
   motorPin2.strength = 0;
   motorPins.push_back(motorPin2);
@@ -239,9 +239,9 @@ int main() {
   //Motor 4 direction pins
   MotorPins motorPin4;
   motorPin4.direction1 = 1;
-  motorPin4.direction2 = 10;
-  motorPin4.encoderA = 2;
-  motorPin4.encoderB = 3;
+  motorPin4.direction2 = 0;
+  motorPin4.encoderA = 3;
+  motorPin4.encoderB = 2;
   motorPin4.rpm = 0;
   motorPin4.strength = 0;
   motorPins.push_back(motorPin4);
@@ -265,8 +265,8 @@ int main() {
 
   //delay(1000);
 
-   Vy = 40.0;
-   Wz = 0.00;
+   Vy = 0.0;
+   Wz = 1.50;
    motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
    for (unsigned i = 0; i < motors.size(); i++) {
      motorPins[i].rpm = desired_rpm[i];
