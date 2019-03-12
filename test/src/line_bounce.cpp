@@ -41,6 +41,14 @@ int motorSpeed (float Wz, float Vx, float Vy, std::vector<float> &desired_rpm) {
 	return 1;  //all good setpoints
 }
 
+void trajectoryPlan(float &Wz, float Vy, float rad, float &delay_time) {
+    float pi = 3.14159;
+    float alpha = rad*pi/2;
+    delay_time = alpha/Vy;
+    Wz = pi/(2*delay_time);
+    delay_time = delay_time*1000;
+}
+
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
@@ -170,7 +178,7 @@ void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor
 
 int main(int argc, char const *argv[]) {
   float Vx = 0.0; //[mm/s]
-  float Vy = 200.0;  //[mm/s] standard forward velocity for robot
+  float Vy = 0.0;  //[mm/s] standard forward velocity for robot
   float Wz = 0.0;  //[rad/s]
 
   TCS3200 rgb(12,13,14);
@@ -228,8 +236,6 @@ int main(int argc, char const *argv[]) {
   t = std::thread(motorThread, std::ref(end), std::ref(motorPins), std::ref(motors));
 
   Vy = 200.0;
-  Vx = 0.0;
-  Wz = 0.0;
   motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
   for (unsigned i = 0; i < motors.size(); i++) {
     motorPins[i].rpm = desired_rpm[i];
@@ -241,14 +247,22 @@ int main(int argc, char const *argv[]) {
   Colour currColour;
   bool white_flag = true;
   bool green_flag = true;
-  // while (white_flag && green_flag) {
-  while (std::chrono::duration_cast<std::chrono::milliseconds>(finish-start).count() < 3000) {
+  bool red_flag = true;
+  //while (std::chrono::duration_cast<std::chrono::milliseconds>(finish-start).count() < 3000) {
+  while (red_flag) {
     currColour = rgb.scan();
     switch (currColour) {
+      case RED:
+        std::cout << "RED\n";
+	red_flag = false;
+	break;
       case GREEN:
         std::cout << "GREEN\n";
         green_flag = false;
         break;
+      case YELLOW:
+	std::cout << "YELLOW\n";
+	break;
       case WHITE:
         std::cout << "WHITE\n";
         white_flag = false;
@@ -285,13 +299,24 @@ int main(int argc, char const *argv[]) {
         motorPins[i].posCount = 0;
       }
     }
-    usleep(100);
+    usleep(50);
     finish = std::chrono::high_resolution_clock::now();
   }
 
+  int CornerRad = 0;
+  float delay_time = 0.0;
+  CornerRad = 150;
+  trajectoryPlan(Wz, Vy, CornerRad, delay_time);
+  motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
   for (unsigned i = 0; i < 4; i++) {
+      motorPins[i].rpm = desired_rpm[i];
       motorPins[i].posCount = 0;
   }
+  int counter = 840*desired_rpm[0]/60*delay_time/1000;
+  while(motorPins[0].posCount < counter) {
+      delay(10);
+  }
+
   end = true;
   delay(1000);
   t.detach();

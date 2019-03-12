@@ -40,10 +40,10 @@ typedef struct rgb {
 
 class TCS3200 {
 private:
-  RGB red = { 190, 90, 120 };
-  RGB white = { 290, 290, 420 };
+  RGB red = { 180, 90, 110 };
+  RGB white = { 250, 270,400 };
   RGB green = { 90, 100, 140 };
-  RGB yellow = { 420, 315, 270 };
+  RGB yellow = { 500, 390, 300 };
   int s3, s4, out;
 protected:
   int getCount(int modeOne, int modeTwo);
