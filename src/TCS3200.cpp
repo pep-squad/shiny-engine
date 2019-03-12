@@ -25,6 +25,8 @@ Colour TCS3200::getColour(RGB rgb) {
     colour = RED;
   } else if ((rgb.red >= (white.red-diff) && rgb.red <= (white.red+diff)) && (rgb.green >= (white.green-diff) && rgb.green <= (white.green+diff)) && (rgb.blue >= (white.blue-diff) && rgb.red <= (white.blue+diff))) {
     colour = WHITE;
+  } else if ((rgb.red >= (green.red-diff) && rgb.red <= (green.red+diff)) && (rgb.green >= (green.green-diff) && rgb.green <= (green.green+diff)) && (rgb.blue >= (green.blue-diff) && rgb.red <= (green.blue+diff))) {
+    colour = GREEN;
   }
   return colour;
 }

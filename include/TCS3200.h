@@ -42,6 +42,7 @@ class TCS3200 {
 private:
   RGB red = { 190, 90, 120 };
   RGB white = { 280, 310, 500 };
+  RGB green = { 90, 140, 170 };
   int s3, s4, out;
 protected:
   int getCount(int modeOne, int modeTwo);
