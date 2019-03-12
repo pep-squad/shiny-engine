@@ -173,7 +173,7 @@ int main(int argc, char const *argv[]) {
   float Vy = 200.0;  //[mm/s] standard forward velocity for robot
   float Wz = 0.0;  //[rad/s]
 
-  TCS3200 rgb(31,11,10);
+  TCS3200 rgb(12,13,14);
   std::thread t;
   std::vector<MotorPins> motorPins;
   std::vector<Motor> motors;
@@ -241,8 +241,8 @@ int main(int argc, char const *argv[]) {
   Colour currColour;
   bool white_flag = true;
   bool green_flag = true;
-  while (std::chrono::duration_cast<std::chrono::milliseconds>(finish-start).count() < 3000) {
   // while (white_flag && green_flag) {
+  while (std::chrono::duration_cast<std::chrono::milliseconds>(finish-start).count() < 3000) {
     currColour = rgb.scan();
     switch (currColour) {
       case GREEN:
@@ -259,38 +259,24 @@ int main(int argc, char const *argv[]) {
     }
 
     if (!white_flag) {
-      Vy = 0.0;
-      Vx = 0.0;
-      Wz = 1.5;
+      Vx = -10;
+      Wz = 0.5;
       motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
       for (unsigned i = 0; i < motors.size(); i++) {
         motorPins[i].rpm = desired_rpm[i];
         motorPins[i].posCount = 0;
       }
-      delay(200);
-
-      Vy = 200.0;
-      Vx = 0.0;
-      Wz = 0.0;
-      motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
-      for (unsigned i = 0; i < motors.size(); i++) {
-        motorPins[i].rpm = desired_rpm[i];
-        motorPins[i].posCount = 0;
-      }
-      delay(500);
       white_flag = true;
     } else if (!green_flag) {
-      Vy = 0.0;
-      Vx = 0.0;
-      Wz = -1.5;
+      Vx = 10;
+      Wz = -0.5;
       motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
       for (unsigned i = 0; i < motors.size(); i++) {
         motorPins[i].rpm = desired_rpm[i];
         motorPins[i].posCount = 0;
       }
-      delay(200);
-
-      Vy = 200.0;
+      green_flag = true;
+    } else {
       Vx = 0.0;
       Wz = 0.0;
       motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
@@ -298,10 +284,7 @@ int main(int argc, char const *argv[]) {
         motorPins[i].rpm = desired_rpm[i];
         motorPins[i].posCount = 0;
       }
-      delay(500);
-      green_flag = true;
     }
-
     usleep(100);
     finish = std::chrono::high_resolution_clock::now();
   }
