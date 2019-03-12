@@ -43,7 +43,7 @@ private:
   RGB yellow = { 95, 90, 90 };
   RGB red = { 80, 75, 60 };
   RGB green = { 60, 70, 82 };
-  RGB white = { 100, 110, 155 };
+  RGB white = { 300, 300, 500 };
   RGB blue = { 52, 60, 87 };
   int s3, s4, out;
 protected:

@@ -266,16 +266,16 @@ int main() {
   //delay(1000);
 
    Vy = 0.0;
-   Wz = 1.50;
+   Wz = 0.0;
    motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
    for (unsigned i = 0; i < motors.size(); i++) {
      motorPins[i].rpm = desired_rpm[i];
      motorPins[i].posCount = 0;
    }
-   delay(5000);
-   for (unsigned i = 0; i < 4; i++) {
-       motorPins[i].posCount = 0;
-   }
+   // delay(5000);
+   // for (unsigned i = 0; i < 4; i++) {
+   //     motorPins[i].posCount = 0;
+   // }
 
   // int trigger = 0;
   // while (trigger < 3) {

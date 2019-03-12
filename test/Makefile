@@ -22,6 +22,8 @@ rgb: $(BIN2)/TCS3200.o
 	sudo $(CC) $(FLAGS) $(SRC)/tcs3200_test.cpp -o $(BIN)/rgb $(BIN2)/TCS3200.o $(INCLUDES) $(LIBRARIES)
 follow: $(BIN2)/HCSR04.o $(BIN2)/Motor.o
 	sudo $(CC) $(FLAGS) $(SRC)/distance_follow.cpp -o $(BIN)/follow $(BIN2)/HCSR04.o $(BIN2)/Motor.o $(INCLUDES) $(LIBRARIES)
+line-bounce: $(BIN2)/TCS3200.o $(BIN2)/Motor.o
+	sudo $(CC) $(FLAGS) $(SRC)/line_bounce.cpp -o $(BIN)/line-bounce $(BIN2)/TCS3200.o $(BIN2)/Motor.o $(INCLUDES) $(LIBRARIES)
 $(BIN)/serial_number.o: $(SRC)/serial_number.cpp
 	sudo $(CC) $(FLAGS) -c -o $@ $< $(INCLUDES) $(LIBRARIES)
 $(BIN2)/HCSR04.o: $(SRC2)/HCSR04.cpp
@@ -33,4 +35,4 @@ $(BIN2)/Motor.o: $(SRC2)/Motor.cpp
 $(BIN2)/TCS3200.o: $(SRC2)/TCS3200.cpp
 	sudo $(CC) $(FLAGS) -c -o $@ $< $(INCLUDES) $(LIBRARIES)
 clean:
-	sudo rm -rf $(BIN)/*.o $(BIN)/motor $(BIN)/object $(BIN)/comms $(BIN)/rgb $(BIN)/follow
+	sudo rm -rf $(BIN)/*.o $(BIN)/motor $(BIN)/object $(BIN)/comms $(BIN)/rgb $(BIN)/follow $(BIN)/line-bounce
