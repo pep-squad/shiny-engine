@@ -241,62 +241,69 @@ int main(int argc, char const *argv[]) {
   Colour currColour;
   bool white_flag = true;
   bool green_flag = true;
-  // while (std::chrono::duration_cast<std::chrono::milliseconds>(finish-start).count() < 10000) {
-  while (white_flag && green_flag) {
+  while (std::chrono::duration_cast<std::chrono::milliseconds>(finish-start).count() < 3000) {
+  // while (white_flag && green_flag) {
     currColour = rgb.scan();
     switch (currColour) {
       case GREEN:
         std::cout << "GREEN\n";
         green_flag = false;
         break;
+      case WHITE:
+        std::cout << "WHITE\n";
+        white_flag = false;
+        break;
       default:
         std::cout << "BLACK\n";
         break;
     }
+
+    if (!white_flag) {
+      Vy = 0.0;
+      Vx = 0.0;
+      Wz = 1.5;
+      motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+      for (unsigned i = 0; i < motors.size(); i++) {
+        motorPins[i].rpm = desired_rpm[i];
+        motorPins[i].posCount = 0;
+      }
+      delay(200);
+
+      Vy = 200.0;
+      Vx = 0.0;
+      Wz = 0.0;
+      motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+      for (unsigned i = 0; i < motors.size(); i++) {
+        motorPins[i].rpm = desired_rpm[i];
+        motorPins[i].posCount = 0;
+      }
+      delay(500);
+      white_flag = true;
+    } else if (!green_flag) {
+      Vy = 0.0;
+      Vx = 0.0;
+      Wz = -1.5;
+      motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+      for (unsigned i = 0; i < motors.size(); i++) {
+        motorPins[i].rpm = desired_rpm[i];
+        motorPins[i].posCount = 0;
+      }
+      delay(200);
+
+      Vy = 200.0;
+      Vx = 0.0;
+      Wz = 0.0;
+      motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+      for (unsigned i = 0; i < motors.size(); i++) {
+        motorPins[i].rpm = desired_rpm[i];
+        motorPins[i].posCount = 0;
+      }
+      delay(500);
+      green_flag = true;
+    }
+
     usleep(100);
     finish = std::chrono::high_resolution_clock::now();
-  }
-
-  if (!white_flag) {
-    Vy = 0.0;
-    Vx = -200.0;
-    Wz = 1.5;
-    motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
-    for (unsigned i = 0; i < motors.size(); i++) {
-      motorPins[i].rpm = desired_rpm[i];
-      motorPins[i].posCount = 0;
-    }
-    delay(200);
-
-    Vy = 200.0;
-    Vx = 0.0;
-    Wz = 0.0;
-    motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
-    for (unsigned i = 0; i < motors.size(); i++) {
-      motorPins[i].rpm = desired_rpm[i];
-      motorPins[i].posCount = 0;
-    }
-    delay(1000);
-  } else if (!green_flag) {
-    Vy = 0.0;
-    Vx = 200.0;
-    Wz = -1.5;
-    motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
-    for (unsigned i = 0; i < motors.size(); i++) {
-      motorPins[i].rpm = desired_rpm[i];
-      motorPins[i].posCount = 0;
-    }
-    delay(200);
-
-    Vy = 200.0;
-    Vx = 0.0;
-    Wz = 0.0;
-    motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
-    for (unsigned i = 0; i < motors.size(); i++) {
-      motorPins[i].rpm = desired_rpm[i];
-      motorPins[i].posCount = 0;
-    }
-    delay(1000);
   }
 
   for (unsigned i = 0; i < 4; i++) {
