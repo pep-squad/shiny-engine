@@ -7,18 +7,23 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <map>
 
 #include "BLE.h"
+    
+typedef struct DataPacket {
+  unsigned long long eta;
+  unsigned long long position;
+} Packet;
 
 void scanThread(BLE &ble) {
   ble.scan();
 }
 
 int main() {
-  // unsigned long long sno = getSerialNumber();
-  // system("sudo sh ../bash/ble_setup.sh");
-  // system("sudo cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16- > serial_no.txt");
+  system("sudo sh ../bash/ble_setup.sh");
   FILE *pipe = popen("sudo cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16-", "r");
+  std::map<unsigned long, Packet> m;
   std::array<char, 128> buffer;
   std::string sno;
   while (fgets(buffer.data(), 128, pipe) != NULL) {
@@ -48,11 +53,23 @@ int main() {
       cnt++;
       start = std::chrono::high_resolution_clock::now();
     }
+    bool empty = true;
     while (!ble.packets.empty()) {
+      empty = false;
       BLE t = ble.packets.front();
       ble.packets.pop();
-      std::cout << "Packet received : UUID " << t.getUUID1() << ":" << t.getUUID2() << ":" << t.getUUID3() << ":" << t.getUUID4() \
-      << " Major " << t.getMajor() << " Minor " << t.getMinor() << " Power " << t.getTxPower() << std::endl;
+      unsigned long sno = t.getUUID1();
+      // { eta, position }
+      Packet test = { t.getUUID2(), t.getUUID3() };
+      m.insert(std::pair<int,Packet>(sno, test));
+      /*std::cout << "Packet received : UUID " << t.getUUID1() << ":" << t.getUUID2() << ":" << t.getUUID3() << ":" << t.getUUID4() \
+      << " Major " << t.getMajor() << " Minor " << t.getMinor() << " Power " << t.getTxPower() << std::endl;*/
+    }
+    if (!empty) {
+        for (auto itr = m.begin(); itr != m.end(); ++itr) { 
+            Packet temp = itr->second;
+            std::cout << itr->first << " : " << temp.eta << ":" << temp.position << std::endl;
+        }        
     }
     finish = std::chrono::high_resolution_clock::now();
   }
