@@ -32,11 +32,7 @@ int main() {
   // unsigned long usno = std::stoull(sno, nullptr, 0);
   // unsigned long usno;
   // sscanf(sno.c_str(), "%lu", &usno);
-  std::cout << sno << std::endl;
-  std::cout << usno << std::endl;
   BLE ble (0x1e02011a, 0x1aff4c00, 0x0215, usno, 0x0, 0x0, 0x0, 0xde, 0x6f, 0x78);
-  std::cout << ble.getUUID1() << std::endl;
-  return 0;
   std::thread v;
   v = std::thread(scanThread, std::ref(ble));
   ble.send();
