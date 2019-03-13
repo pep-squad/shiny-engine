@@ -38,13 +38,14 @@ int main() {
       ble.setUUID3((cnt*100));
       ble.setUUID4(cnt);
       ble.send();
+      cnt++;
       start = std::chrono::high_resolution_clock::now();
     }
     while (!ble.packets.empty()) {
       BLE t = ble.packets.front();
       ble.packets.pop();
-      std::cout << "Packet received : " << t.getUUID1() << t.getUUID2() << t.getUUID3() << t.getUUID4() \
-      << " : " << t.getMajor() << " : " << t.getMinor() << " : " << t.getTxPower() << std::endl;
+      std::cout << "Packet received : UUID" << t.getUUID1() << ":" << t.getUUID2() << ":" << t.getUUID3() << ":" << t.getUUID4() \
+      << " Major " << t.getMajor() << " Minor " << t.getMinor() << " Power " << t.getTxPower() << std::endl;
     }
     finish = std::chrono::high_resolution_clock::now();
   }
