@@ -74,6 +74,8 @@ void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor
   float derivativeError[4] = {0, 0, 0, 0};
   std::ofstream myfile;
    myfile.open("Speed Data.txt");
+  float kp, ki, kd;
+
 
   for (unsigned i = 0; i < 4; i++) {
     rpm[i][0] = 0;
@@ -137,10 +139,16 @@ void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor
     if (i == 3) {
       myfile <<std::endl;
     }
-
-		float kp = 1.7;//0.85;
-  	float ki = 1.2; //0.5;
-    float kd = .05; //0.002;
+	//for good overall: kp = 1.7, ki = 1.2, kd = 0.02
+	if (motorPins[i].rpm < 15 && motorPins[i].rpm > -15) {
+           kp = 2.3;
+  	   ki = 1;
+    	   kd = 0.75;
+	} else {
+	   kp = 0.85;
+	   ki = 1.0;
+	   kd = 0.02;
+	}
 
   	error[i][1] = error[i][0];
   	error[i][0] = (motorPins[i].rpm - motors[i].getRpm());
@@ -265,13 +273,22 @@ int main() {
 
   //delay(1000);
 
-   Vy = 0.0;
+   Vy = 200.0;
    Wz = 0.0;
+   motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+   for (unsigned i = 0; i < motors.size(); i++) {
+      motorPins[i].rpm =desired_rpm[i];
+   }
+   delay(3000);
+
+   Vy = 100.0;
+   Wz = 1.0;
    motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
    for (unsigned i = 0; i < motors.size(); i++) {
      motorPins[i].rpm = desired_rpm[i];
      motorPins[i].posCount = 0;
    }
+   delay(3000);
    // delay(5000);
    // for (unsigned i = 0; i < 4; i++) {
    //     motorPins[i].posCount = 0;

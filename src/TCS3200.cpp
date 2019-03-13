@@ -18,17 +18,17 @@ Colour TCS3200::scan() {
 
 Colour TCS3200::getColour(RGB rgb) {
   Colour colour = BLACK;
-  int diff = 40;
-  std::cout << rgb.red << ":" << rgb.green << ":" << rgb.blue << std::endl;
-  std::cout << yellow.red << ":" << yellow.green << ":" << yellow.blue << std::endl;
-  if ((rgb.red >= (red.red-diff) && rgb.red <= (red.red+diff)) && (rgb.green >= (red.green-diff) && rgb.green <= (red.green+diff)) && (rgb.blue >= (red.blue-diff) && rgb.blue <= (red.blue+diff))) {
-    colour = RED;
-  } else if ((rgb.red >= (white.red-diff) && rgb.red <= (white.red+diff)) && (rgb.green >= (white.green-diff) && rgb.green <= (white.green+diff)) && (rgb.blue >= (white.blue-diff) && rgb.blue <= (white.blue+diff))) {
+  int diff = 50;
+  // std::cout << rgb.red << ":" << rgb.green << ":" << rgb.blue << std::endl;
+  // if ((rgb.red >= (white.red-diff) && rgb.red <= (white.red+diff)) && (rgb.green >= (white.green-diff) && rgb.green <= (white.green+diff)) && (rgb.blue >= (white.blue-diff) && rgb.blue <= (white.blue+diff))) {
+  if (rgb.red >= white.red && rgb.green >= white.green && rgb.blue >= white.blue) {
     colour = WHITE;
-  } else if ((rgb.red >= (green.red-diff) && rgb.red <= (green.red+diff)) && (rgb.green >= (green.green-diff) && rgb.green <= (green.green+diff)) && (rgb.blue >= (green.blue-diff) && rgb.blue <= (green.blue+diff))) {
+  // } else if ((rgb.red >= (green.red-diff) && rgb.red <= (green.red+diff)) && (rgb.green >= (green.green-diff) && rgb.green <= (green.green+diff)) && (rgb.blue >= (green.blue-diff) && rgb.blue <= (green.blue+diff))) {
+  } else if (rgb.red >= green.red && rgb.green >= green.green && rgb.blue >= green.blue) {
     colour = GREEN;
-  } else if ((rgb.red >= (yellow.red-diff) && rgb.red <= (yellow.red+diff)) && (rgb.green >= (yellow.green-diff) && rgb.green <= (yellow.green+diff)) && (rgb.blue >= (yellow.blue-diff) && rgb.blue <= (yellow.blue+diff))) {
-    colour = YELLOW;
+  } else if ((rgb.red >= (red.red-diff) && rgb.red <= (red.red+diff)) && (rgb.green >= (red.green-diff) && rgb.green <= (red.green+diff)) && (rgb.blue >= (red.blue-diff) && rgb.blue <= (red.blue+diff))) {
+  // } else if (rgb.red >= red.red && rgb.green >= red.green && rgb.blue >= red.blue) {
+    colour = RED;
   }
   return colour;
 }
