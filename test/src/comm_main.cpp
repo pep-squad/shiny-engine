@@ -14,21 +14,39 @@ void scanThread(BLE &ble) {
 
 int main() {
   // unsigned long long sno = getSerialNumber();
-  system("sudo cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16- > serial_no.txt");
-  std::ifstream fsno ("serial_no.txt");
+  system("sudo sh ../bash/ble_setup.sh");
+  // system("sudo cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16- > serial_no.txt");
+  FILE *pipe = popen("sudo cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16-", "r");
+  std::array<char, 128> buffer;
   std::string sno;
-  std::getline(fsno, sno);
+  while (fgets(buffer.data(), 128, pipe) != NULL) {
+      sno += buffer.data();
+  }
+  sno[sno.length()-1] = '\0';
+  pclose(pipe);
   unsigned long usno = std::stoul(sno, nullptr, 0);
   BLE ble (0x1e02011a, 0x1aff4c00, 0x0215, usno, 0x0, 0x0, 0x0, 0xde, 0x6f, 0x78);
   std::thread v;
   v = std::thread(scanThread, std::ref(ble));
+  ble.send();
+  auto start = std::chrono::high_resolution_clock::now();
+  auto finish = start;
+  int cnt = 1;
   while (1) {
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count() > 3000) {
+      ble.setUUID2((cnt*100/2));
+      ble.setUUID3((cnt*100));
+      ble.setUUID4(cnt);
+      ble.send();
+      start = std::chrono::high_resolution_clock::now();
+    }
     while (!ble.packets.empty()) {
       BLE t = ble.packets.front();
       ble.packets.pop();
       std::cout << "Packet received : " << t.getUUID1() << t.getUUID2() << t.getUUID3() << t.getUUID4() \
       << " : " << t.getMajor() << " : " << t.getMinor() << " : " << t.getTxPower() << std::endl;
     }
+    finish = std::chrono::high_resolution_clock::now();
   }
   return 0;
 }

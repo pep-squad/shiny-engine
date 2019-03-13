@@ -255,3 +255,16 @@ void BLE::setMinor(unsigned long minor) {
 void BLE::setMajor(unsigned long major) {
    maj = major;
 }
+
+void BLE::setUUID1(unsigned long long uuid) {
+  uuid1 = uuid;
+}
+void BLE::setUUID2(unsigned long long uuid) {
+  uuid2 = uuid;
+}
+void BLE::setUUID3(unsigned long long uuid) {
+  uuid3 = uuid;
+}
+void BLE::setUUID4(unsigned long long uuid) {
+  uuid4 = uuid;
+}
