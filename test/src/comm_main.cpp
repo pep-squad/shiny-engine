@@ -15,6 +15,8 @@
 typedef struct DataPacket {
   unsigned long long eta;
   unsigned long long position;
+  unsigned long majorFlag;
+
 } Packet;
 
 void scanThread(BLE &ble) {
@@ -52,6 +54,7 @@ void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
 
   //update positions and update map
   unsigned long long rank = 0;
+  auto previous = positionRankings.front();
   for(auto & x: positionRankings){
     rank++;
 
@@ -61,8 +64,24 @@ void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
       botMap->insert(std::pair<unsigned long,Packet>(x.first, x.second));
     }
     else{
+      //set threshold flag
+      //if within 3 seconds of bot ahead of itself, slow down.
+      if(local.second.position > 1){
+        //auto previous = --x;//std::ref(std::find(positionRankings.begin(),positionRankings.end(),x)); //find previous list element
+        if((local.second.position - previous.second.position) <= 3000){
+          ble->setMajor(1);
+        }
+        else{
+          ble->setMajor(0);
+        }
+      }
+      else{
+        ble->setMajor(0);
+      }
+
       ble->setUUID3(rank);
     }
+    previous = x;
   }
 }
 
@@ -123,9 +142,9 @@ int main() {
     finish = std::chrono::high_resolution_clock::now();
     calculatePosition(&m,&ble);
     for(auto const& entry: m){
-      std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << std::endl;
+      std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
     }
-    std::cout << "Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << std::endl;
+    std::cout << "Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
   }
   return 0;
 }
