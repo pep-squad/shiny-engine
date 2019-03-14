@@ -20,7 +20,6 @@ typedef struct DataPacket {
 void scanThread(BLE &ble) {
   ble.scan();
 }
-Packet localPacket;
 
 /////BRAD
 bool compareETA(std::pair<long unsigned int, DataPacket> one, std::pair<long unsigned int, DataPacket> two){
@@ -32,7 +31,7 @@ bool compareETA(std::pair<long unsigned int, DataPacket> one, std::pair<long uns
   }
 }
 
-void calculatePosition(std::map<unsigned long, Packet>* botMap){
+void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
 
   //list for ranking
   std::list<std::pair<unsigned long, Packet>> positionRankings;
@@ -41,6 +40,13 @@ void calculatePosition(std::map<unsigned long, Packet>* botMap){
     positionRankings.push_back(x);
   }
 
+  //add local to rankings list
+  std::pair<unsigned long, Packet> local;
+  local.first = ble->getUUID1();
+  local.second.eta = ble->getUUID2();
+  local.second.position = ble->getUUID3();
+  positionRankings.push_back(local);
+
   //sort list
   positionRankings.sort(compareETA);
 
@@ -48,18 +54,20 @@ void calculatePosition(std::map<unsigned long, Packet>* botMap){
   unsigned long long rank = 0;
   for(auto & x: positionRankings){
     rank++;
-    x.second.position = rank;
-    botMap->erase(x.first);
-    botMap->insert(std::pair<unsigned long,Packet>(x.first, x.second));
+
+    if (x.first != local.first){
+      x.second.position = rank;
+      botMap->erase(x.first);
+      botMap->insert(std::pair<unsigned long,Packet>(x.first, x.second));
+    }
+    else{
+      ble->setUUID3(rank);
+    }
   }
 }
 
 ///////BRAD^^^^
 int main() {
-  /////
-  localPacket.eta = 10;
-  localPacket.position = 1;
-  ////
 
   system("sudo sh ../bash/ble_setup.sh");
   FILE *pipe = popen("sudo cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16-", "r");
@@ -113,10 +121,11 @@ int main() {
         }
     }
     finish = std::chrono::high_resolution_clock::now();
-    calculatePosition(&m);
+    calculatePosition(&m,&ble);
     for(auto const& entry: m){
-      std::cout << "Serial: " << entry.first << "ETA: " << entry.second.eta << "Position: " << entry.second.position << std::endl;
+      std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << std::endl;
     }
+    std::cout << "Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << std::endl;
   }
   return 0;
 }
