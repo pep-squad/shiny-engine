@@ -38,6 +38,10 @@ typedef struct rgb {
   int red, green, blue;
 } RGB;
 
+typedef struct BooleanRGB {
+  bool r, g, b;
+} BoolRGB;
+
 class TCS3200 {
 private:
   RGB red = { 100, 150, 100 };
@@ -45,6 +49,10 @@ private:
   RGB blue = { 40, 40, 80 };
   RGB green = { 60, 110, 100 };
   RGB trans = { 115, 110, 200 };
+  BoolRGB redBool = { true, false, false };
+  BoolRGB greenBool = { false, true, true };
+  BoolRGB yellowBool = { true, true, false };
+  BoolRGB blackBool = { false, false, false };
   int s3, s4, out;
 protected:
   int getCount(int modeOne, int modeTwo);

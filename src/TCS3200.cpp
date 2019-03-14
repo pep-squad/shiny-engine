@@ -18,7 +18,34 @@ Colour TCS3200::scan() {
 
 Colour TCS3200::getColour(RGB rgb) {
   Colour colour = BLACK;
-  int diff = 20;
+  BoolRGB rgbBool;
+  std::cout << rgb.red << ":" << rgb.green << ":" << rgb.blue << std::endl;
+  if (rgb.red >= 70) {
+    rgbBool.r = true;
+  } else {
+    rgbBool.r = false;
+  }
+  if (rgb.green >= 70) {
+    rgbBool.g = true;
+  } else {
+    rgbBool.g = false;
+  }
+  if (rgb.blue >= 70) {
+    rgbBool.b = true;
+  } else {
+    rgbBool.b = false;
+  }
+  if (rgbBool.r == yellowBool.r && rgbBool.g == yellowBool.g && rgbBool.b == yellowBool.b) {
+    colour = YELLOW;
+  } else if (rgbBool.r == greenBool.r && rgbBool.g == greenBool.g && rgbBool.b == greenBool.b) {
+    colour = GREEN;
+  } else if (rgbBool.r == redBool.r && rgbBool.g == redBool.g && rgbBool.b == redBool.b) {
+    colour = RED;
+  }
+
+
+
+  /*int diff = 20;
   std::cout << rgb.red << ":" << rgb.green << ":" << rgb.blue << std::endl;
   if ((rgb.red >= (trans.red-diff) && rgb.red >= (trans.red+diff)) && (rgb.red >= (trans.green-diff) && rgb.red >= (trans.green+diff)) && rgb.blue > trans.blue) {
     colour = BLACK;
@@ -28,7 +55,7 @@ Colour TCS3200::getColour(RGB rgb) {
     colour = RED;
   } else {
     colour = BLUE;
-  }
+  }*/
   return colour;
 }
 
