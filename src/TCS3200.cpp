@@ -18,17 +18,16 @@ Colour TCS3200::scan() {
 
 Colour TCS3200::getColour(RGB rgb) {
   Colour colour = BLACK;
-  int diff = 50;
-  // std::cout << rgb.red << ":" << rgb.green << ":" << rgb.blue << std::endl;
-  // if ((rgb.red >= (white.red-diff) && rgb.red <= (white.red+diff)) && (rgb.green >= (white.green-diff) && rgb.green <= (white.green+diff)) && (rgb.blue >= (white.blue-diff) && rgb.blue <= (white.blue+diff))) {
-  if (rgb.red >= white.red && rgb.green >= white.green && rgb.blue >= white.blue) {
+  int diff = 20;
+  std::cout << rgb.red << ":" << rgb.green << ":" << rgb.blue << std::endl;
+  if ((rgb.red >= (trans.red-diff) && rgb.red >= (trans.red+diff)) && (rgb.red >= (trans.green-diff) && rgb.red >= (trans.green+diff)) && rgb.blue > trans.blue) {
+    colour = BLACK;
+  }else if (rgb.red >= white.red && rgb.green >= white.green && rgb.blue >= white.blue) {
     colour = WHITE;
-  // } else if ((rgb.red >= (green.red-diff) && rgb.red <= (green.red+diff)) && (rgb.green >= (green.green-diff) && rgb.green <= (green.green+diff)) && (rgb.blue >= (green.blue-diff) && rgb.blue <= (green.blue+diff))) {
-  } else if (rgb.red >= green.red && rgb.green >= green.green && rgb.blue >= green.blue) {
-    colour = GREEN;
-  } else if ((rgb.red >= (red.red-diff) && rgb.red <= (red.red+diff)) && (rgb.green >= (red.green-diff) && rgb.green <= (red.green+diff)) && (rgb.blue >= (red.blue-diff) && rgb.blue <= (red.blue+diff))) {
-  // } else if (rgb.red >= red.red && rgb.green >= red.green && rgb.blue >= red.blue) {
+  } else if (rgb.red >= red.red && rgb.green < red.green && rgb.blue > red.blue) {
     colour = RED;
+  } else {
+    colour = BLUE;
   }
   return colour;
 }

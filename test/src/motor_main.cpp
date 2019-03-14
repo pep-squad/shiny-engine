@@ -139,37 +139,47 @@ void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor
     if (i == 3) {
       myfile <<std::endl;
     }
+	float u = 0;
+	bool pidFlag = true;
 	//for good overall: kp = 1.7, ki = 1.2, kd = 0.02
-	if (motorPins[i].rpm < 15 && motorPins[i].rpm > -15) {
-           kp = 2.3;
-  	   ki = 1;
-    	   kd = 0.75;
-	} else {
-	   kp = 0.85;
-	   ki = 1.0;
-	   kd = 0.02;
-	}
 
   	error[i][1] = error[i][0];
   	error[i][0] = (motorPins[i].rpm - motors[i].getRpm());
-
   	integralError[i] += error[i][0]*rpm_time/1000;
   	derivativeError[i] = (error[i][0] - error[i][1]);
-		float u = 0;
+
+
+	if (motorPins[i].rpm < 15 && motorPins[i].rpm > -15) {
+           kp = 2.75;
+  	   ki = 0.02;
+    	   kd = 0.02;
+	   u = kp*error[i][0] + ki*integralError[i] + kd*derivativeError[i];
+	   if (motors[i].getRpm() == 0 && motorPins[i].rpm != 0) {
+		u = 15*sign(motorPins[i].rpm);
+		pidFlag = false;
+		//error[i][0] = 0;
+		//error[i][1] = 0;
+		integralError[i] = 0;
+	   }
+	} else {
+	   kp = 1.1;
+	   ki = 5.0;
+	   kd = 0.02;
+	}
+
 		// if (motorPins[i].rpm != 0 && motors[i].getRpm() == 0.0) {
 		// 	u = 15*sign(motorPins[i].rpm);
 		// }else {
     //     	u = kp*error[i][0] + ki*integralError[i] + kd*derivativeError[i];
 		// }
-    u = kp*error[i][0] + ki*integralError[i] + kd*derivativeError[i];
-        	if (u > 100)
-         	  u = 100;
-        	if (u < -100)
+	if(pidFlag) {
+   		u = kp*error[i][0] + ki*integralError[i] + kd*derivativeError[i];
+        }
+	if (u > 100)
+        	u = 100;
+        if (u < -100)
             u = -100;
-		//if (i == 0) {
-	 	//std::cout << "Motor: " << i << "  " << motors[i].getRpm()<< " : " << u << std::endl;
-		//}
-		motorPins[i].strength = u;
+	motorPins[i].strength = u;
 
   	if (motorPins[i].strength > 0 ) {
   		motors[i].forward(motorPins[i].strength);
@@ -273,13 +283,14 @@ int main() {
 
   //delay(1000);
 
+   /*
    Vy = 200.0;
    Wz = 0.0;
    motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
    for (unsigned i = 0; i < motors.size(); i++) {
       motorPins[i].rpm =desired_rpm[i];
    }
-   delay(3000);
+   delay(2000);
 
    Vy = 100.0;
    Wz = 1.0;
@@ -288,43 +299,53 @@ int main() {
      motorPins[i].rpm = desired_rpm[i];
      motorPins[i].posCount = 0;
    }
-   delay(3000);
+   delay(1600);
+
+   Vy = 200.0;
+   Wz = 0;
+   motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+   for (unsigned i = 0; i < motors.size(); i++) {
+      motorPins[i].rpm = desired_rpm[i];
+   }
+   delay(1000);*/
+
    // delay(5000);
    // for (unsigned i = 0; i < 4; i++) {
    //     motorPins[i].posCount = 0;
    // }
 
-  // int trigger = 0;
-  // while (trigger < 3) {
-  //   Vy = 200.0;
-  //   Wz = 0.00;
-  //   motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
-  //   for (unsigned i = 0; i < motors.size(); i++) {
-  //     motorPins[i].rpm = desired_rpm[i];
-  //   }
-  //   for (unsigned i = 0; i < 4; i++) {
-  //     motorPins[i].posCount = 0;
-  //   }
-  //   int counter = 840*desired_rpm[0]/60*1.11;
-  //   while (motorPins[0].posCount < counter) {
-  //     delay(10);
-  //   }
-  //
-  //   //delay(1110+10);
-  //
-  //   CornerRad = 150; //[mm]
-  //   trajectoryPlan(Wz, Vy, CornerRad, delay_time);
-  //   motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
-  //   for (unsigned i = 0; i < 4; i++) {
-  //     motorPins[i].posCount = 0;
-  //     motorPins[i].rpm = desired_rpm[i];
-  //   }
-  //   counter = 840*desired_rpm[0]/60*delay_time/1000;
-  //   while (motorPins[0].posCount < counter) {
-  //       delay(5);
-  //   }
-  //   trigger++;
-  // }
+  int trigger = 0;
+  while (trigger < 3) {
+     Vy = 200.0;
+     Wz = 0.00;
+     motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+     for (unsigned i = 0; i < motors.size(); i++) {
+       motorPins[i].rpm = desired_rpm[i];
+     }
+     for (unsigned i = 0; i < 4; i++) {
+       motorPins[i].posCount = 0;
+     }
+     int counter = 840*desired_rpm[0]/60*1.11;
+     while (motorPins[0].posCount < counter) {
+       delay(10);
+     }
+  
+     //delay(1110+10);
+  
+     CornerRad = 100; //[mm]
+     Vy = 100;
+     trajectoryPlan(Wz, Vy, CornerRad, delay_time);
+     motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+     for (unsigned i = 0; i < 4; i++) {
+       motorPins[i].posCount = 0;
+       motorPins[i].rpm = desired_rpm[i];
+     }
+     counter = 840*desired_rpm[0]/60*delay_time/1000;
+     while (motorPins[0].posCount < counter) {
+         delay(5);
+     }
+     trigger++;
+   }
   end = true;
   delay(1000);
 
