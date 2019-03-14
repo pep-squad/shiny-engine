@@ -576,7 +576,7 @@ int main(int argc, char const *argv[]) {
     }
     //delay(delay_time + 50);
     // delay(delay_time);
-    int counter = 840*desired_rpm[0]/60*delay_time/1000 - 100;
+    int counter = 840*desired_rpm[0]/60*delay_time/1000 - 80;
     while(motorPins[0].posCount < counter) {
       delay(10);
     }
