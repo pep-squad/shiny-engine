@@ -8,6 +8,7 @@
 #include <sstream>
 #include <iostream>
 #include <map>
+#include <list>
 
 #include "BLE.h"
 
@@ -19,8 +20,47 @@ typedef struct DataPacket {
 void scanThread(BLE &ble) {
   ble.scan();
 }
+Packet localPacket;
 
+/////BRAD
+bool compareETA(std::pair<long unsigned int, DataPacket> one, std::pair<long unsigned int, DataPacket> two){
+  if(one.second.eta <= two.second.eta){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
+void calculatePosition(std::map<unsigned long, Packet>* botMap){
+
+  //list for ranking
+  std::list<std::pair<unsigned long, Packet>> positionRankings;
+
+  for(auto const& x: *botMap){
+    positionRankings.push_back(x);
+  }
+
+  //sort list
+  positionRankings.sort(compareETA);
+
+  //update positions and update map
+  unsigned long long rank = 0;
+  for(auto & x: positionRankings){
+    rank++;
+    x.second.position = rank;
+    botMap->erase(x.first);
+    botMap->insert(std::pair<unsigned long,Packet>(x.first, x.second));
+  }
+}
+
+///////BRAD^^^^
 int main() {
+  /////
+  localPacket.eta = 10;
+  localPacket.position = 1;
+  ////
+
   system("sudo sh ../bash/ble_setup.sh");
   FILE *pipe = popen("sudo cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16-", "r");
   std::map<unsigned long, Packet> m;
@@ -73,6 +113,10 @@ int main() {
         }
     }
     finish = std::chrono::high_resolution_clock::now();
+    calculatePosition(&m);
+    for(auto const& entry: m){
+      std::cout << "Serial: " << entry.first << "ETA: " << entry.second.eta << "Position: " << entry.second.position << std::endl;
+    }
   }
   return 0;
 }
