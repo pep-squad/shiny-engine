@@ -59,7 +59,80 @@ double sign(double x) {
   return x;
 }
 
+
 void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor> &motors) {
+  for (unsigned i = 0; i < motors.size(); i++) {
+    motors[i].setOldA(motors[i].getEncoderA());
+    motors[i].setOldB(motors[i].getEncoderB());
+  }
+
+  int Bin_Value = 0;
+  float rpm_time = 0;
+  int scale = 30*7*4;
+
+  auto start = std::chrono::high_resolution_clock::now();
+  auto finish = start;
+  auto deltaT = start;
+
+  while (!end) {
+    for (unsigned i = 0; i < motors.size(); i++) {
+      motors[i].setNewA(motors[i].getEncoderA());
+      motors[i].setNewB(motors[i].getEncoderB());
+      Bin_Value = motors[i].getOldA()*8+motors[i].getOldB()*4+motors[i].getNewA()*2+motors[i].getNewB();
+      motors[i].encoderStage(Bin_Value);
+      motors[i].setOldA(motors[i].getNewA());
+      motors[i].setOldB(motors[i].getNewB());
+    }
+    rpm_time = std::chrono::duration_cast<std::chrono::milliseconds>(finish - deltaT).count();
+    if (rpm_time > 15) {
+      for (unsigned i = 0; i < 4; i++) {
+        float rpm = motors[i].getCount()/(rpm_time/1000 * scale)*60;
+        motors[i].setRpm(rpm);
+        motorPins[i].posCount += motors[i].getCount();
+        motors[i].setCount(0);
+        if (rpm > motorPins[i].rpm) {
+          if ((rpm-5) > motorPins[i].rpm) {
+	      motorPins[i].strength -= 2;
+	  } else {
+              motorPins[i].strength--;
+	  }
+        }
+        else if(rpm < motorPins[i].rpm) {
+            if ((rpm+5) < motorPins[i].rpm) {
+	        motorPins[i].strength += 2;
+	    } else {
+                motorPins[i].strength++;
+	    }
+        }
+        if (motorPins[i].strength > 0 ) {
+          motors[i].forward(motorPins[i].strength);
+        } else if (motorPins[i].strength < 0) {
+          motors[i].backward((motorPins[i].strength*-1));
+        } else {
+          motors[i].stop();
+        }
+      }
+     deltaT = std::chrono::high_resolution_clock::now();
+    }
+    finish = std::chrono::high_resolution_clock::now();
+  }
+
+  for (unsigned i = 0; i < 4; i++) {
+    std::cout<<"Encoder: "<< i+1 <<std::endl;
+    std::cout<<motors[i].getCount()<<std::endl;
+    // std::cout<<encError[i]<<std::endl;
+    printf("%f\n", motors[i].getRpm());
+  }
+
+  for (unsigned i = 0; i < motors.size(); i++) {
+    motors[i].stop();
+  }
+  delay(100);
+}
+
+
+
+/*void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor> &motors) {
   for (unsigned i = 0; i < motors.size(); i++) {
     motors[i].setOldA(motors[i].getEncoderA());
     motors[i].setOldB(motors[i].getEncoderB());
@@ -207,7 +280,7 @@ void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor
     motors[i].stop();
   }
   delay(100);
-}
+}*/
 
 /*void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor> &motors) {
   for (unsigned i = 0; i < motors.size(); i++) {
@@ -396,7 +469,7 @@ int main(int argc, char const *argv[]) {
   desired_rpm.push_back(0.0);
   desired_rpm.push_back(0.0);
   t = std::thread(motorThread, std::ref(end), std::ref(motorPins), std::ref(motors));
-  for (unsigned i = 0; i < motors.size(); i++) {
+  /*for (unsigned i = 0; i < motors.size(); i++) {
     motorPins[i].rpm = 0;
   }
   int x = 0;
@@ -422,8 +495,8 @@ int main(int argc, char const *argv[]) {
         break;
     }
     usleep(25);
-  }
-  for (unsigned int cnt = 0; cnt < 1; cnt++) {
+  }*/
+  for (unsigned int cnt = 0; cnt < 8; cnt++) {
     Vy = 150.0;
     motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
     for (unsigned i = 0; i < motors.size(); i++) {
@@ -435,49 +508,44 @@ int main(int argc, char const *argv[]) {
     bool white_flag = true;
     bool green_flag = true;
     bool red_flag = true;
-    int red_cnt = 0;
+    red_flag = true;
     while (red_flag) {
+      white_flag = true;
+      green_flag = true;
       currColour = rgb.scan();
       switch (currColour) {
         case RED:
-          //red_flag = false;
-          red_cnt++;
-	  if (red_cnt > 4) {
-	    red_flag = false;
-	  }
+          red_flag = false;
 	  std::cout << "RED\n";
           break;
-        case BLUE:
+        case GREEN:
+        case BLACK:
           green_flag = false;
-          std::cout << "BLUE\n";
+          std::cout << "GREEN\n";
           break;
         case WHITE:
-	case BLACK:
           std::cout << "WHITE\n";
-	  red_cnt = 0;
           white_flag = false;
           break;
         default:
           break;
       }
-      if (!white_flag) {
-        Vx = -10;
-        Wz = 0.25;
+      if (!green_flag) {
+        Vx = -10.0;
+        Wz = 0.03;
         motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
         for (unsigned i = 0; i < motors.size(); i++) {
           motorPins[i].rpm = desired_rpm[i];
           motorPins[i].posCount = 0;
         }
-        white_flag = true;
-      } else if (!green_flag) {
-        Vx = 10;
-        Wz = -0.25;
+      } else if (!white_flag) {
+        Vx = 10.0;
+        Wz = -0.03;
         motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
         for (unsigned i = 0; i < motors.size(); i++) {
           motorPins[i].rpm = desired_rpm[i];
           motorPins[i].posCount = 0;
         }
-        green_flag = true;
       } else {
         Vx = 0.0;
         Wz = 0.0;
@@ -489,9 +557,17 @@ int main(int argc, char const *argv[]) {
       }
       usleep(25);
     }
+
+    /******************/
+    for (unsigned i = 0; i < 4; i++) {
+        motors[i].stop();
+    }
+    /*****************/
+
     int CornerRad = 100;
     float delay_time = 0.0;
     Vy = 100;
+    Vx = 0.0;
     trajectoryPlan(Wz, Vy, CornerRad, delay_time);
     motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
     for (unsigned i = 0; i < 4; i++) {
@@ -500,23 +576,8 @@ int main(int argc, char const *argv[]) {
     }
     //delay(delay_time + 50);
     // delay(delay_time);
-    int counter = 840*desired_rpm[0]/60*delay_time/1000;
-    // green_flag = true;
-    // white_flag = true;
-    while(motorPins[0].posCount < counter && green_flag && white_flag) {
-      /*currColour = rgb.scan();
-      switch (currColour) {
-        case GREEN:
-          std::cout << "GREEN\n";
-          green_flag = false;
-          break;
-        case WHITE:
-          std::cout << "WHITE\n";
-          white_flag = false;
-          break;
-        default:
-          break;
-      }*/
+    int counter = 840*desired_rpm[0]/60*delay_time/1000 - 100;
+    while(motorPins[0].posCount < counter) {
       delay(10);
     }
   }
