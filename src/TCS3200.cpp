@@ -35,8 +35,8 @@ Colour TCS3200::getColour(RGB rgb) {
   } else {
     rgbBool.b = false;
   }
-  if (rgbBool.r == yellowBool.r && rgbBool.g == yellowBool.g && rgbBool.b == yellowBool.b) {
-    colour = YELLOW;
+  if (rgbBool.r == whiteBool.r && rgbBool.g == whiteBool.g && rgbBool.b == whiteBool.b) {
+    colour = WHITE;
   } else if (rgbBool.r == greenBool.r && rgbBool.g == greenBool.g && rgbBool.b == greenBool.b) {
     colour = GREEN;
   } else if (rgbBool.r == redBool.r && rgbBool.g == redBool.g && rgbBool.b == redBool.b) {

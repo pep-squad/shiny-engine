@@ -410,9 +410,6 @@ int main(int argc, char const *argv[]) {
       case GREEN:
         std::cout << "GREEN\n";
         break;
-      case BLUE:
-	std::cout << "BLUE\n";
-	break;
       case WHITE:
 	x = 0;
         std::cout << "WHITE\n";

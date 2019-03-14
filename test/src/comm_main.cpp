@@ -15,6 +15,7 @@ void scanThread(BLE &ble) {
 int main() {
   // unsigned long long sno = getSerialNumber();
   system("sudo cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16- > serial_no.txt");
+  return 0;
   std::ifstream fsno ("serial_no.txt");
   std::string sno;
   std::getline(fsno, sno);

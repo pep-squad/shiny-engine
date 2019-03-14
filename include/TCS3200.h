@@ -50,6 +50,7 @@ private:
   RGB green = { 60, 110, 100 };
   RGB trans = { 115, 110, 200 };
   BoolRGB redBool = { true, false, false };
+  BoolRGB whiteBool = { true, true, true };
   BoolRGB greenBool = { false, true, true };
   BoolRGB yellowBool = { true, true, false };
   BoolRGB blackBool = { false, false, false };
