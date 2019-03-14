@@ -10,7 +10,7 @@
 #include <map>
 
 #include "BLE.h"
-    
+
 typedef struct DataPacket {
   unsigned long long eta;
   unsigned long long position;
@@ -46,11 +46,11 @@ int main() {
   int cnt = 1;
   while (1) {
     if (std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count() > 3000) {
+      cnt++;
       ble.setUUID2((cnt*100/2));
       ble.setUUID3((cnt*100));
       ble.setUUID4(cnt);
       ble.send();
-      cnt++;
       start = std::chrono::high_resolution_clock::now();
     }
     bool empty = true;
@@ -61,15 +61,16 @@ int main() {
       unsigned long sno = t.getUUID1();
       // { eta, position }
       Packet test = { t.getUUID2(), t.getUUID3() };
-      m.insert(std::pair<int,Packet>(sno, test));
+      m.erase(sno);
+      m.insert(std::pair<unsigned long,Packet>(sno, test));
       /*std::cout << "Packet received : UUID " << t.getUUID1() << ":" << t.getUUID2() << ":" << t.getUUID3() << ":" << t.getUUID4() \
       << " Major " << t.getMajor() << " Minor " << t.getMinor() << " Power " << t.getTxPower() << std::endl;*/
     }
     if (!empty) {
-        for (auto itr = m.begin(); itr != m.end(); ++itr) { 
+        for (auto itr = m.begin(); itr != m.end(); ++itr) {
             Packet temp = itr->second;
             std::cout << itr->first << " : " << temp.eta << ":" << temp.position << std::endl;
-        }        
+        }
     }
     finish = std::chrono::high_resolution_clock::now();
   }
