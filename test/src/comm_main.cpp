@@ -23,7 +23,6 @@ void scanThread(BLE &ble) {
   ble.scan();
 }
 
-/////BRAD
 bool compareETA(std::pair<long unsigned int, DataPacket> one, std::pair<long unsigned int, DataPacket> two){
   if(one.second.eta <= two.second.eta){
     return true;
@@ -67,7 +66,7 @@ void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
       //set threshold flag
       //if within 3 seconds of bot ahead of itself, slow down.
       if(local.second.position > 1){
-        //auto previous = --x;//std::ref(std::find(positionRankings.begin(),positionRankings.end(),x)); //find previous list element
+        //find previous list element
         if((local.second.position - previous.second.position) <= 3000){
           ble->setMajor(1);
         }
@@ -85,7 +84,6 @@ void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
   }
 }
 
-///////BRAD^^^^
 int main() {
 
   system("sudo sh ../bash/ble_setup.sh");
