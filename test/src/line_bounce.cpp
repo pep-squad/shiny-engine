@@ -43,7 +43,7 @@ int motorSpeed (float Wz, float Vx, float Vy, std::vector<float> &desired_rpm) {
 
 void trajectoryPlan(float &Wz, float Vy, float rad, float &delay_time) {
     float pi = 3.14159;
-    float alpha = rad*pi/2;
+    float alpha = rad*80*pi/180;
     delay_time = alpha/Vy;
     Wz = pi/(2*delay_time);
     delay_time = delay_time*1000;
@@ -469,11 +469,11 @@ int main(int argc, char const *argv[]) {
   desired_rpm.push_back(0.0);
   desired_rpm.push_back(0.0);
   t = std::thread(motorThread, std::ref(end), std::ref(motorPins), std::ref(motors));
-  /*for (unsigned i = 0; i < motors.size(); i++) {
+  for (unsigned i = 0; i < motors.size(); i++) {
     motorPins[i].rpm = 0;
   }
   int x = 0;
-  while (1) {
+  /*while (1) {
     Colour col = rgb.scan();
     switch (col) {
       case RED:
@@ -540,7 +540,7 @@ int main(int argc, char const *argv[]) {
         }
       } else if (!white_flag) {
         Vx = 10.0;
-        Wz = -0.03;
+        Wz = -0.05;
         motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
         for (unsigned i = 0; i < motors.size(); i++) {
           motorPins[i].rpm = desired_rpm[i];

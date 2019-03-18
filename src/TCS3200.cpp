@@ -19,7 +19,7 @@ Colour TCS3200::scan() {
 Colour TCS3200::getColour(RGB rgb) {
   Colour colour = BLACK;
   BoolRGB rgbBool;
-  //std::cout << rgb.red << ":" << rgb.green << ":" << rgb.blue << std::endl;
+  std::cout << rgb.red << ":" << rgb.green << ":" << rgb.blue << std::endl;
   if (rgb.red >= 70) {
     rgbBool.r = true;
   } else {
