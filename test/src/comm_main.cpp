@@ -112,9 +112,9 @@ int main() {
   while (1) {
     if (std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count() > 3000) {
       cnt++;
-      ble.setUUID2((cnt*100/2));
-      ble.setUUID3((cnt*100));
-      ble.setUUID4(cnt);
+      ble.setUUID2((1111));
+      ble.setUUID3((2222));
+      ble.setUUID4(3333);
       ble.send();
       start = std::chrono::high_resolution_clock::now();
     }
