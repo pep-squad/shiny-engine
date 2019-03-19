@@ -416,7 +416,6 @@ int main(int argc, char const *argv[]) {
   float Vx = 0.0; //[mm/s]
   float Vy = 0.0;  //[mm/s] standard forward velocity for robot
   float Wz = 0.0;  //[rad/s]
-
   TCS3200 rgb(12,13,14);
   std::thread t;
   std::vector<MotorPins> motorPins;
@@ -468,19 +467,16 @@ int main(int argc, char const *argv[]) {
   desired_rpm.push_back(0.0);
   desired_rpm.push_back(0.0);
   desired_rpm.push_back(0.0);
-  t = std::thread(motorThread, std::ref(end), std::ref(motorPins), std::ref(motors));
-  for (unsigned i = 0; i < motors.size(); i++) {
-    motorPins[i].rpm = 0;
-  }
-  int x = 0;
-  /*while (1) {
+  /*int x = 0;
+  while (1) {
     Colour col = rgb.scan();
     switch (col) {
       case RED:
-        x++;
-	std::cout << "RED " << x << "\n";
+	std::cout << "RED " << x << std::endl;
+	x++;
         break;
       case GREEN:
+	x = 0;
         std::cout << "GREEN\n";
         break;
       case WHITE:
@@ -496,49 +492,65 @@ int main(int argc, char const *argv[]) {
     }
     usleep(25);
   }*/
-  for (unsigned int cnt = 0; cnt < 8; cnt++) {
-    Vy = 150.0;
+  t = std::thread(motorThread, std::ref(end), std::ref(motorPins), std::ref(motors));
+  for (unsigned i = 0; i < motors.size(); i++) {
+    motorPins[i].rpm = 0;
+  }
+  for (unsigned int cnt = 0; cnt < 24; cnt++) {
+    int corner = 0;
+    Vy = 130.0;
     motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
     for (unsigned i = 0; i < motors.size(); i++) {
       motorPins[i].rpm = desired_rpm[i];
       motorPins[i].posCount = 0;
     }
-
     Colour currColour;
     bool white_flag = true;
     bool green_flag = true;
     bool red_flag = true;
     red_flag = true;
+    int x = 0;
+    Colour lastColour = BLACK;
     while (red_flag) {
       white_flag = true;
       green_flag = true;
       currColour = rgb.scan();
       switch (currColour) {
         case RED:
-          red_flag = false;
+          x++;
+          //red_flag = false;
+	  if (x > 1 && corner > 10) {
+            red_flag = false;
+	  }
 	  std::cout << "RED\n";
           break;
         case GREEN:
-        case BLACK:
+	  corner++;
+	  x = 0;
           green_flag = false;
           std::cout << "GREEN\n";
           break;
+        case BLACK:
+	  //x = 0;
+	  break;
         case WHITE:
+	  corner++;
+	  x = 0;
           std::cout << "WHITE\n";
           white_flag = false;
           break;
         default:
           break;
       }
-      if (!green_flag) {
+      if (!white_flag) {
         Vx = -10.0;
-        Wz = 0.03;
+        Wz = 0.05;
         motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
         for (unsigned i = 0; i < motors.size(); i++) {
           motorPins[i].rpm = desired_rpm[i];
           motorPins[i].posCount = 0;
         }
-      } else if (!white_flag) {
+      } else if (!green_flag) {
         Vx = 10.0;
         Wz = -0.05;
         motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
@@ -557,13 +569,11 @@ int main(int argc, char const *argv[]) {
       }
       usleep(25);
     }
-
     /******************/
-    for (unsigned i = 0; i < 4; i++) {
-        motors[i].stop();
-    }
+    //for (unsigned i = 0; i < 4; i++) {
+    //    motors[i].stop();
+    //}
     /*****************/
-
     int CornerRad = 100;
     float delay_time = 0.0;
     Vy = 100;

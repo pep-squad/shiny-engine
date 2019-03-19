@@ -23,7 +23,7 @@ rgb: $(BIN2)/TCS3200.o
 follow: $(BIN2)/HCSR04.o $(BIN2)/Motor.o
 	sudo $(CC) $(FLAGS) $(SRC)/distance_follow.cpp -o $(BIN)/follow $(BIN2)/HCSR04.o $(BIN2)/Motor.o $(INCLUDES) $(LIBRARIES)
 follow-bounce: $(BIN2)/TCS3200.o $(BIN2)/HCSR04.o $(BIN2)/Motor.o
-	sudo $(CC) $(FLAGS) $(SRC)/follow_bounce.cpp -o $(BIN)/bounce-bounce $(BIN2)/TCS3200.o $(BIN2)/HCSR04.o $(BIN2)/Motor.o $(INCLUDES) $(LIBRARIES)
+	sudo $(CC) $(FLAGS) $(SRC)/follow_bounce.cpp -o $(BIN)/follow-bounce $(BIN2)/TCS3200.o $(BIN2)/HCSR04.o $(BIN2)/Motor.o $(INCLUDES) $(LIBRARIES)
 line-follow: $(BIN2)/TCS3200.o $(BIN2)/Motor.o
 	sudo $(CC) $(FLAGS) $(SRC)/line_bounce.cpp -o $(BIN)/line-bounce $(BIN2)/TCS3200.o $(BIN2)/Motor.o $(INCLUDES) $(LIBRARIES)
 $(BIN)/serial_number.o: $(SRC)/serial_number.cpp

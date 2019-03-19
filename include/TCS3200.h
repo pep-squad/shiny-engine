@@ -35,7 +35,7 @@ typedef enum colourEnum {
 } Colour;
 
 typedef struct rgb {
-  int red, green, blue;
+  int red, green, blue, clear;
 } RGB;
 
 typedef struct BooleanRGB {
@@ -44,19 +44,13 @@ typedef struct BooleanRGB {
 
 class TCS3200 {
 private:
-  RGB red = { 100, 150, 100 };
-  RGB white = { 100, 150, 100 };
-  RGB blue = { 40, 40, 80 };
-  RGB green = { 60, 110, 100 };
-  RGB trans = { 115, 110, 200 };
-  BoolRGB redBool = { true, false, false };
-  BoolRGB whiteBool = { true, true, true };
-  BoolRGB greenBool = { false, true, true };
-  BoolRGB yellowBool = { true, true, false };
-  BoolRGB blackBool = { false, false, false };
+  int whiteColour;
+  int redColour;
+  int blackColour;
+  int prevCount;
   int s3, s4, out;
 protected:
-  int getCount(int modeOne, int modeTwo);
+  unsigned long long getCount(int modeOne, int modeTwo);
   Colour getColour(RGB rgb);
 public:
   TCS3200(int s3, int s4, int out);

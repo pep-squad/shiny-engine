@@ -206,7 +206,7 @@ int main(int argc, char const *argv[]) {
   /*while(1) {
       float dist = ultra.distance();
       std::cout << dist << std::endl;
-      usleep(1000);
+      usleep(25);
   }*/
   /*int x = 0;
   while (1) {
@@ -236,39 +236,38 @@ int main(int argc, char const *argv[]) {
   float actual_Vy = desired_Vy;
   for (unsigned int cnt = 0; cnt < 8; cnt++) {
     //Vy = 150.0;
-    float dist = ultra.distance();
-    if (dist < MINIMUM_DISTANCE) {
-        // decrease the speed if getting closer
-        for (unsigned i = 0; i < desired_rpm.size(); i++) {
-          if (desired_Vy > 0) {
-            if ((actual_Vy-10 > 0)) {
-              actual_Vy -= 10;
-            } else {
-              actual_Vy = 0;
-            }
-          } else if (desired_Vy < 0) {
-            if ((actual_Vy+10) < 0) {
-              actual_Vy += 10;
-            } else {
-              actual_Vy = 0;
-            }
-          }
-        }
-    } else {
-        actual_Vy = desired_Vy;
-    }
-    motorSpeed(Wz, Vx, actual_Vy, std::ref(desired_rpm));
-    for (unsigned i = 0; i < motors.size(); i++) {
-      motorPins[i].rpm = desired_rpm[i];
-      motorPins[i].posCount = 0;
-    }
-
     Colour currColour;
     bool white_flag = true;
     bool green_flag = true;
     bool red_flag = true;
     red_flag = true;
     while (red_flag) {
+      float dist = ultra.distance();
+      if (dist < MINIMUM_DISTANCE) {
+          // decrease the speed if getting closer
+          for (unsigned i = 0; i < desired_rpm.size(); i++) {
+            if (desired_Vy > 0) {
+              if ((actual_Vy-2 > 0)) {
+                actual_Vy -= 2;
+              } else {
+                actual_Vy = 0;
+              }
+            } else if (desired_Vy < 0) {
+              if ((actual_Vy+2) < 0) {
+                actual_Vy += 2;
+              } else {
+                actual_Vy = 0;
+              }
+            }
+          }
+      } else {
+          actual_Vy = desired_Vy;
+      }
+      motorSpeed(Wz, Vx, actual_Vy, std::ref(desired_rpm));
+      for (unsigned i = 0; i < motors.size(); i++) {
+        motorPins[i].rpm = desired_rpm[i];
+        motorPins[i].posCount = 0;
+      }
       white_flag = true;
       green_flag = true;
       currColour = rgb.scan();
