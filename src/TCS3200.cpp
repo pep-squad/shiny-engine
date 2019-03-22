@@ -53,6 +53,6 @@ unsigned long long TCS3200::getCount(int modeOne, int modeTwo) {
       total += duration;
       count += 1;
     }
-    std::cout << (total/10) << std::endl;
+    // std::cout << (total/10) << std::endl;
     return (total/10);
 }

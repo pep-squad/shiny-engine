@@ -16,15 +16,6 @@
 
 #define MINIMUM_DISTANCE  20
 
-typedef struct DesiredRpmValues {
-  float motor1, motor2, motor3, motor4;
-} DesiredRpm;
-
-typedef struct HCSR04GPIOPin {
-  int trig;
-  int echo;
-} DistancePins;
-
 typedef struct MotorPinLayout {
   int direction1, direction2, encoderA, encoderB;
   int strength, count, rpm, posCount;
@@ -38,17 +29,17 @@ int motorSpeed (float Wz, float Vx, float Vy, std::vector<float> &desired_rpm) {
     desired_rpm[1] = (2.9189*Vb[0] - 0.0171*Vb[1] - 0.0171*Vb[2])*9.5495;
     desired_rpm[2] = (2.9189*Vb[0] + 0.0171*Vb[1] - 0.0171*Vb[2])*9.5495;
     desired_rpm[3] = (2.9189*Vb[0] + 0.0171*Vb[1] + 0.0171*Vb[2])*9.5495;
-	//catch any rpm's that the motor will not be able to output
-	for (idx = 0; idx < 4; idx++) {
-		if (desired_rpm[idx] > 110) {
-			desired_rpm[idx] = 110;
-			flag = 1;
-	        }
-	}
-	if (flag == 1) {
-		return 0; //check for return in main code for rejected motor setpoint
-	}
-	return 1;  //all good setpoints
+    //catch any rpm's that the motor will not be able to output
+    for (idx = 0; idx < 4; idx++) {
+      if (desired_rpm[idx] > 110) {
+        desired_rpm[idx] = 110;
+        flag = 1;
+      }
+    }
+    if (flag == 1) {
+      return 0; //check for return in main code for rejected motor setpoint
+    }
+    return 1;  //all good setpoints
 }
 
 void trajectoryPlan(float &Wz, float Vy, float rad, float &delay_time) {
@@ -69,6 +60,54 @@ double sign(double x) {
   return x;
 }
 
+float newVy(float Vy, float desired_Vy, float newDistance, float oldDistance) {
+  /*if (newDistance < MINIMUM_DISTANCE) {
+    if (newDistance > oldDistance) {
+      // increase speed if getting further
+      if (Vy > 0 && (Vy+1) <= desired_Vy) {
+        Vy += 1;
+      } else if (Vy < 0 && (Vy-1) >= desired_Vy) {
+        Vy -= 1;
+      }
+    } else if (newDistance < oldDistance) {
+      // decrease speed if getting closer
+      if (Vy > 0) {
+        if ((Vy-1) > 0) {
+          Vy -= 1;
+        } else {
+          Vy = 0;
+        }
+      } else if (Vy < 0) {
+        if ((Vy+1) > 0) {
+          Vy += 1;
+        } else {
+          Vy = 0;
+        }
+      }
+    }
+  } else {
+    Vy = desired_Vy;
+  }*/
+  if (newDistance < MINIMUM_DISTANCE) {
+      // decrease the speed if getting closer
+      if (desired_Vy > 0) {
+        if ((Vy-5 > 0)) {
+          Vy -= 5;
+        } else {
+          Vy = 0;
+        }
+      } else if (desired_Vy < 0) {
+        if ((Vy+5) < 0) {
+          Vy += 5;
+        } else {
+          Vy = 0;
+        }
+      }
+  } else {
+    Vy = desired_Vy;
+  }
+  return Vy;
+}
 
 void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor> &motors) {
   for (unsigned i = 0; i < motors.size(); i++) {
@@ -140,15 +179,50 @@ void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor
   delay(100);
 }
 
+void testUltra(HCSR04 ultra) {
+  // Testing Ultrasonic Sensor
+  while(1) {
+    float dist = ultra.distance();
+    std::cout << dist << std::endl;
+    usleep(25);
+  }
+}
+
+void testColour (TCS3200 rgb) {
+  // Testing the Colour Sensor
+  int x = 0;
+  while (1) {
+    Colour col = rgb.scan();
+    switch (col) {
+      case RED:
+        std::cout << "RED " << x << std::endl;
+        x++;
+        break;
+      case GREEN:
+        x = 0;
+        std::cout << "GREEN\n";
+        break;
+      case WHITE:
+        x = 0;
+        std::cout << "WHITE\n";
+        break;
+      case BLACK:
+        x = 0;
+        std::cout << "BLACK\n";
+      default:
+        //std::cout << "BLACK\n";
+        break;
+    }
+    usleep(25);
+  }
+}
+
 int main(int argc, char const *argv[]) {
   float Vx = 0.0; //[mm/s]
   float Vy = 0.0;  //[mm/s] standard forward velocity for robot
   float Wz = 0.0;  //[rad/s]
-  DistancePins ultrasonicPins;
-  ultrasonicPins.trig = 9;
-  ultrasonicPins.echo = 7;
-  HCSR04 ultra (ultrasonicPins.trig, ultrasonicPins.echo);
-  TCS3200 rgb(12,13,14);
+  HCSR04 ultra (9,7);
+  TCS3200 rgb (12,13,14);
   std::thread t;
   std::vector<MotorPins> motorPins;
   std::vector<Motor> motors;
@@ -188,7 +262,6 @@ int main(int argc, char const *argv[]) {
   motorPin4.encoderB = 2;
   motorPin4.rpm = 0;
   motorPin4.strength = 0;
-  /*********************/
   motorPins.push_back(motorPin4);
   motors.reserve(4);
   for (unsigned i = 0; i < motorPins.size(); i++) {
@@ -203,123 +276,76 @@ int main(int argc, char const *argv[]) {
   for (unsigned i = 0; i < motors.size(); i++) {
     motorPins[i].rpm = 0;
   }
-  /*while(1) {
-      float dist = ultra.distance();
-      std::cout << dist << std::endl;
-      usleep(25);
-  }*/
-  /*int x = 0;
-  while (1) {
-    Colour col = rgb.scan();
-    switch (col) {
-      case RED:
-        x++;
-	std::cout << "RED " << x << "\n";
-        break;
-      case GREEN:
-        std::cout << "GREEN\n";
-        break;
-      case WHITE:
-	x = 0;
-        std::cout << "WHITE\n";
-        break;
-      case BLACK:
-	x = 0;
-	std::cout << "BLACK\n";
-      default:
-        //std::cout << "BLACK\n";
-        break;
+  // testUltra(ultra);
+  // testColour(rgb);
+  float desired_Vy = 130.0;
+  float distance = 0;
+  for (unsigned int cnt = 0; cnt < 4; cnt++) {
+    // Vy = 130.0;
+    Vy = desired_Vy;
+    motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+    for (unsigned i = 0; i < motors.size(); i++) {
+      motorPins[i].rpm = desired_rpm[i];
+      motorPins[i].posCount = 0;
     }
-    usleep(25);
-  }*/
-  float desired_Vy = 150.0;
-  float actual_Vy = desired_Vy;
-  for (unsigned int cnt = 0; cnt < 8; cnt++) {
-    //Vy = 150.0;
     Colour currColour;
     bool white_flag = true;
     bool green_flag = true;
     bool red_flag = true;
-    red_flag = true;
+    int corner = 0;
+    int x = 0;
     while (red_flag) {
-      float dist = ultra.distance();
-      if (dist < MINIMUM_DISTANCE) {
-          // decrease the speed if getting closer
-          for (unsigned i = 0; i < desired_rpm.size(); i++) {
-            if (desired_Vy > 0) {
-              if ((actual_Vy-2 > 0)) {
-                actual_Vy -= 2;
-              } else {
-                actual_Vy = 0;
-              }
-            } else if (desired_Vy < 0) {
-              if ((actual_Vy+2) < 0) {
-                actual_Vy += 2;
-              } else {
-                actual_Vy = 0;
-              }
-            }
-          }
-      } else {
-          actual_Vy = desired_Vy;
-      }
-      motorSpeed(Wz, Vx, actual_Vy, std::ref(desired_rpm));
-      for (unsigned i = 0; i < motors.size(); i++) {
-        motorPins[i].rpm = desired_rpm[i];
-        motorPins[i].posCount = 0;
-      }
       white_flag = true;
       green_flag = true;
+      float dist = ultra.distance();
+      Vy = newVy(Vy, desired_Vy, dist, distance);
+      // std::cout << "distance " << dist << " - speed " << Vy << std::endl;
+      distance = dist;
       currColour = rgb.scan();
       switch (currColour) {
         case RED:
-          red_flag = false;
-	  std::cout << "RED\n";
+          x++;
+          //red_flag = false;
+          if (corner > 10) {
+            red_flag = false;
+          }
+          std::cout << "RED\n";
           break;
         case GREEN:
-        case BLACK:
+          corner++;
+          x = 0;
           green_flag = false;
           std::cout << "GREEN\n";
           break;
+        case BLACK:
+          //x = 0;
+          break;
         case WHITE:
+          corner++;
+          x = 0;
           std::cout << "WHITE\n";
           white_flag = false;
           break;
         default:
           break;
       }
-      if (!green_flag) {
+      if (!white_flag) {
         Vx = -10.0;
-        Wz = 0.03;
-        motorSpeed(Wz, Vx, actual_Vy, std::ref(desired_rpm));
-        for (unsigned i = 0; i < motors.size(); i++) {
-          motorPins[i].rpm = desired_rpm[i];
-          motorPins[i].posCount = 0;
-        }
-      } else if (!white_flag) {
+        Wz = 0.05;
+      } else if (!green_flag) {
         Vx = 10.0;
         Wz = -0.05;
-        motorSpeed(Wz, Vx, actual_Vy, std::ref(desired_rpm));
-        for (unsigned i = 0; i < motors.size(); i++) {
-          motorPins[i].rpm = desired_rpm[i];
-          motorPins[i].posCount = 0;
-        }
       } else {
         Vx = 0.0;
         Wz = 0.0;
-        motorSpeed(Wz, Vx, actual_Vy, std::ref(desired_rpm));
-        for (unsigned i = 0; i < motors.size(); i++) {
-          motorPins[i].rpm = desired_rpm[i];
-          motorPins[i].posCount = 0;
-        }
+      }
+      motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+      for (unsigned i = 0; i < motors.size(); i++) {
+        motorPins[i].rpm = desired_rpm[i];
+        motorPins[i].posCount = 0;
       }
       usleep(25);
     }
-    /******************/
-    for (unsigned i = 0; i < 4; i++) {
-        motors[i].stop();
-    }
-    /*****************/
     int CornerRad = 100;
     float delay_time = 0.0;
     Vy = 100;
@@ -330,8 +356,6 @@ int main(int argc, char const *argv[]) {
         motorPins[i].rpm = desired_rpm[i];
         motorPins[i].posCount = 0;
     }
-    //delay(delay_time + 50);
-    // delay(delay_time);
     int counter = 840*desired_rpm[0]/60*delay_time/1000 - 80;
     while(motorPins[0].posCount < counter) {
       delay(10);
