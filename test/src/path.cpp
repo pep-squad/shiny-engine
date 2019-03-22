@@ -226,6 +226,13 @@ void testColour (TCS3200 rgb) {
   }
 }
 
+float timeToIntersection(int remTurns, float Vy, int currCount) {
+  int straights = remTurns + 1;
+  float remDistance = ((620 * (float)straights) - currCount) / 2.29;
+  float time = (remDistance / Vy) + (remTurns * 1.47);
+  return time;
+}
+
 int main(int argc, char const *argv[]) {
   float Vx = 0.0; //[mm/s]
   float Vy = 0.0;  //[mm/s] standard forward velocity for robot
@@ -235,7 +242,7 @@ int main(int argc, char const *argv[]) {
   std::thread t;
   std::vector<MotorPins> motorPins;
   std::vector<Motor> motors;
-  Turn turns[8] = {RIGHT_TURN,LEFT_TURN,LEFT_TURN,LEFT_TURN,RIGHT_TURN,LEFT_TURN,LEFT_TURN,LEFT_TURN};
+  Turn turns[4] = {LEFT_TURN,LEFT_TURN,LEFT_TURN,RIGHT_TURN};
   bool end = false;
   //motor1 1 setup
   MotorPins motorPin1;
@@ -307,7 +314,9 @@ int main(int argc, char const *argv[]) {
     bool red_flag = true;
     int corner = 0;
     int x = 0;
+    float total = 0.0;
     while (red_flag) {
+      total = 0.0;
       white_flag = true;
       green_flag = true;
       float dist = ultra.distance();
@@ -345,7 +354,6 @@ int main(int argc, char const *argv[]) {
         Vx = 0.0;
         Wz = 0.0;
       }
-      float total = 0.0;
       motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
       for (unsigned i = 0; i < 4; i++) {
         motorPins[i].rpm = desired_rpm[i];
@@ -356,10 +364,14 @@ int main(int argc, char const *argv[]) {
           total += motorPins[i].posCount;
         }
       }
-      if ((total/4) >= 620.0) {
+      total /= 4;
+      if (total >= 620.0) {
         std::cout << "timeout\n";
         red_flag = false;
       }
+      int remTurns = 3-turnCount;
+      float time = timeToIntersection(remTurns, Vy, total);
+      std::cout << "Time remaining " << time << std::endl;
       usleep(10);
     }
     Turn turn = turns[turnCount];
@@ -394,7 +406,7 @@ int main(int argc, char const *argv[]) {
         delay(10);
       }
     }
-    turnCount = (turnCount+1)%8;
+    turnCount = (turnCount+1)%4;
   }
   end = true;
   delay(1000);
