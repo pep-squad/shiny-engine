@@ -44,10 +44,26 @@ unsigned long long TCS3200::getCount(int modeOne, int modeTwo) {
     delay(10);
     int count = 0;
     unsigned long long total = 0;
+    auto a = std::chrono::high_resolution_clock::now();
+    auto b = a;
     while (count < 10) {
-      while(digitalRead(out) != 0); // wait for low signal
+      a = std::chrono::high_resolution_clock::now();
+      b = a;
+      while(digitalRead(out) != 0) { // wait for low signal
+        auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(b-a).count();
+        if (diff > 1000000) {
+          return 1000000;
+        }
+      }
       auto start = std::chrono::high_resolution_clock::now();
-      while(digitalRead(out) != 1); // wait for low signal
+      a = start;
+      b = a;
+      while(digitalRead(out) != 1) { // wait for low signal
+        auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(b-a).count();
+        if (diff > 1000000) {
+          return 1000000;
+        }
+      }
       auto end = std::chrono::high_resolution_clock::now();
       auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count();
       total += duration;

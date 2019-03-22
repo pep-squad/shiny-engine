@@ -14,6 +14,7 @@ HCSR04::HCSR04(int t, int e) : trig(t), echo(e) {
 float HCSR04::distance() {
   //TRIG pin must start LOW
   digitalWrite(trig, LOW);
+  // delay(30);
   delay(30);
   //Send trig pulse
   digitalWrite(trig, HIGH);
