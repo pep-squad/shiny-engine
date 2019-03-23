@@ -28,7 +28,7 @@ float HCSR04::distance() {
     // add in a timeout
     end = std::chrono::high_resolution_clock::now();
     auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-    if (diff > 1500000) {
+    if (diff > 3000000) {
       return 100;
     }
   }
@@ -41,7 +41,7 @@ float HCSR04::distance() {
     // add in a timeout
     end = std::chrono::high_resolution_clock::now();
     auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-    if (diff > 1500000) {
+    if (diff > 3000000) {
       return 100;
     }
   }

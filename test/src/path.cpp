@@ -366,7 +366,6 @@ int main(int argc, char const *argv[]) {
       }
       total /= 4;
       if (total >= 620.0) {
-        std::cout << "timeout\n";
         red_flag = false;
       }
       int remTurns = 3-turnCount;
