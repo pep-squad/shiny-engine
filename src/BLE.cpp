@@ -84,7 +84,7 @@ void BLE::send() {
   // 1E 02 01 1A 1A FF 4C 00 02 15 63 6F 3F 8F 64 91 4B EE 95 F7 D8 CC 64 A8 63 B5 00 00 00 00 C8 00
   std::stringstream stringStream;
   std::stringstream test;
-  std::string cmd;
+  //std::string cmd;
   long tx = txPower;
   if (tx < 0) {
     tx = twosComp(tx);
@@ -129,7 +129,22 @@ void BLE::send() {
   unsigned int min1 = (min & 0xFF00) >> 8U;
   unsigned int min2 = (min & 0x00FF);
   // 1e 02 01 1a 1a ff FF FF 02 15
-  stringStream << "sudo /home/pi/shiny-engine/bash/ble_send.sh ' " \
+  /*stringStream << "sudo hcitool -i hci0 cmd 0x08 0x0008 ' " \
+  << std::hex << p1 << " " << p2 << " " << p3 << " " << p4 << " " << p5 << " " \
+  << p6 << " " << p7 << " " << p8 << " " << p9 << " " << p10 << " " \
+  << u1 << " " << u2 << " " << u3 << " " << u4 << " " \
+  << u5 << " " << u6 << " " << u7 << " " << u8 << " " \
+  << u9 << " " << u10 << " " << u11 << " " << u12 << " " \
+  << u13 << " " << u14 << " " << u15 << " " << u16 << " " \
+  << maj1 << " " << maj2 << " " << min1 << " " << min2 << " " << tx << " 00' > dump.txt &";
+  cmd = stringStream.str();*/
+  char cmd[1000];
+  sprintf(cmd,"sudo hcitool -i hci0 cmd 0x08 0x0008 ' %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x 00 ' > dump.txt &", \
+		  p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,\
+		  u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15,u16,\
+		  maj1,maj2,min1,min2,(unsigned)tx);
+  execl("./",cmd,NULL);
+  /*stringStream << "sudo /home/pi/shiny-engine/bash/ble_send.sh ' " \
   << std::hex << p1 << " " << p2 << " " << p3 << " " << p4 << " " << p5 << " " \
   << p6 << " " << p7 << " " << p8 << " " << p9 << " " << p10 << " " \
   << u1 << " " << u2 << " " << u3 << " " << u4 << " " \
@@ -138,7 +153,7 @@ void BLE::send() {
   << u13 << " " << u14 << " " << u15 << " " << u16 << " " \
   << maj1 << " " << maj2 << " " << min1 << " " << min2 << " " << tx << " 00' > dump.txt";
   cmd = stringStream.str();
-  system(cmd.c_str());
+  system(cmd.c_str());*/
 }
 
 void BLE::scan() {

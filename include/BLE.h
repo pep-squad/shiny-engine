@@ -11,6 +11,8 @@
 #include <sstream>
 #include <cmath>
 #include <chrono>
+#include <sys/wait.h>
+#include <csignal>
 
 class BLE {
 private:

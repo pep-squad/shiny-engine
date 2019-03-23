@@ -15,6 +15,7 @@
 typedef struct DataPacket {
   unsigned long long eta;
   unsigned long long position;
+  unsigned long long serial;
   unsigned long majorFlag;
 
 } Packet;
@@ -24,9 +25,17 @@ void scanThread(BLE &ble) {
 }
 
 bool compareETA(std::pair<long unsigned int, DataPacket> one, std::pair<long unsigned int, DataPacket> two){
-  if(one.second.eta <= two.second.eta){
-    return true;
+  if(one.second.eta == two.second.eta){
+	  if(one.second.serial < two.second.serial){
+		  return true;
+	  }
+	  else{
+		  return false;
+	  }
   }
+  else if(one.second.eta < two.second.eta){
+	 return true;
+  }	
   else{
     return false;
   }
@@ -46,6 +55,7 @@ void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
   local.first = ble->getUUID1();
   local.second.eta = ble->getUUID2();
   local.second.position = ble->getUUID3();
+  local.second.serial = ble->getUUID1();
   positionRankings.push_back(local);
 
   //sort list
@@ -131,7 +141,7 @@ int main() {
       ble.packets.pop();
       unsigned long sno = t.getUUID1();
       // { eta, position }
-      Packet test = { t.getUUID2(), t.getUUID3() };
+      Packet test = { t.getUUID2(), t.getUUID3() ,sno};
       m.erase(sno);
       m.insert(std::pair<unsigned long,Packet>(sno, test));
       /*std::cout << "Packet received : UUID " << t.getUUID1() << ":" << t.getUUID2() << ":" << t.getUUID3() << ":" << t.getUUID4() \
@@ -140,7 +150,7 @@ int main() {
     if (!empty) {
         for (auto itr = m.begin(); itr != m.end(); ++itr) {
             Packet temp = itr->second;
-            std::cout << itr->first << " : " << temp.eta << ":" << temp.position << std::endl;
+            //std::cout << itr->first << " : " << temp.eta << ":" << temp.position << std::endl;
         }
     }
     finish = std::chrono::high_resolution_clock::now();
@@ -149,6 +159,7 @@ int main() {
       std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
     }
     std::cout << "Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
+    usleep(100000);
   }
   return 0;
 }
