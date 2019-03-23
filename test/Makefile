@@ -16,8 +16,8 @@ motor: $(SRC)/motor_main.cpp $(BIN2)/Motor.o
 	sudo $(CC) $(FLAGS) $(SRC)/motor_main.cpp -o $(BIN)/motor $(BIN2)/Motor.o $(INCLUDES) $(LIBRARIES)
 hcsr04: $(SRC)/hcsr04_test.cpp $(BIN2)/HCSR04.o
 	sudo $(CC) $(FLAGS) $(SRC)/hcsr04_test.cpp -o $(BIN)/object $(BIN2)/HCSR04.o $(INCLUDES) $(LIBRARIES)
-comms: $(BIN)/serial_number.o
-	sudo $(CC) $(FLAGS) $(SRC)/comm_main.cpp -o $(BIN)/comms $(BIN)/serial_number.o $(BIN2)/BLE.o $(INCLUDES) $(LIBRARIES)
+comms: $(SRC)/comm_main.cpp
+	sudo $(CC) $(FLAGS) $(SRC)/comm_main.cpp -o $(BIN)/comms  $(BIN2)/BLE.o $(INCLUDES) $(LIBRARIES)
 rgb: $(BIN2)/TCS3200.o
 	sudo $(CC) $(FLAGS) $(SRC)/tcs3200_test.cpp -o $(BIN)/rgb $(BIN2)/TCS3200.o $(INCLUDES) $(LIBRARIES)
 follow: $(BIN2)/HCSR04.o $(BIN2)/Motor.o

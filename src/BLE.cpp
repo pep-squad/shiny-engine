@@ -48,6 +48,14 @@ BLE::BLE (unsigned long long prefix1, unsigned long long prefix2, unsigned int p
         }
 
 unsigned long long hexToDec(std::string hex) {
+
+  //convert string to hex
+  //hex[hex.length()-1] = '\0';
+  std::istringstream iss(hex);
+  unsigned long long usno;
+  iss >> std::hex >> usno;
+  return usno;
+  /*
   unsigned long long dec;
   dec = 0;
   int size = hex.length();
@@ -59,7 +67,8 @@ unsigned long long hexToDec(std::string hex) {
       dec += (hex[j] - 55) * pow(16, (i-1));
     }
   }
-  return dec;
+
+  return dec;*/
 }
 
 long twosComp(long tx) {
@@ -127,7 +136,7 @@ void BLE::send() {
   << u5 << " " << u6 << " " << u7 << " " << u8 << " " \
   << u9 << " " << u10 << " " << u11 << " " << u12 << " " \
   << u13 << " " << u14 << " " << u15 << " " << u16 << " " \
-  << maj1 << " " << maj2 << " " << min1 << " " << min2 << " " << tx << " 00'";
+  << maj1 << " " << maj2 << " " << min1 << " " << min2 << " " << tx << " 00' > dump.txt";
   cmd = stringStream.str();
   system(cmd.c_str());
 }
@@ -198,6 +207,8 @@ void BLE::extractBuffer(std::string buffer) {
     // only add to iBeacons if the headers are the same
     if (header.compare(currHeader) == 0) {
       std::string data = buffer.substr(46, buffer.length());
+      //std::cout << "Data: " << std::hex << data << std::endl; //test
+      //std::cout << "hex before convert: " << std::hex << data.substr(0, 8) << std::endl; //test
       // prefix
       unsigned int prefix1 = hexToDec(header.substr(0, 8));
       unsigned int prefix2 = hexToDec(header.substr(8, 8));
@@ -207,6 +218,8 @@ void BLE::extractBuffer(std::string buffer) {
       unsigned long long uuid2 = hexToDec(data.substr(8, 8));
       unsigned long long uuid3 = hexToDec(data.substr(16, 8));
       unsigned long long uuid4 = hexToDec(data.substr(24, 8));
+
+    //  std::cout << "uuid1: " << std::hex << uuid1 << std::endl;
 
       unsigned long maj = hexToDec(data.substr(32, 4)); // major
       unsigned long min = hexToDec(data.substr(36, 4)); // minor
@@ -254,4 +267,17 @@ void BLE::setMinor(unsigned long minor) {
 }
 void BLE::setMajor(unsigned long major) {
    maj = major;
+}
+
+void BLE::setUUID1(unsigned long long uuid) {
+  uuid1 = uuid;
+}
+void BLE::setUUID2(unsigned long long uuid) {
+  uuid2 = uuid;
+}
+void BLE::setUUID3(unsigned long long uuid) {
+  uuid3 = uuid;
+}
+void BLE::setUUID4(unsigned long long uuid) {
+  uuid4 = uuid;
 }

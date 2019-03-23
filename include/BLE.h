@@ -71,6 +71,10 @@ public:
   long getTxPower();
   void setMinor(unsigned long major);
   void setMajor(unsigned long minor);
+  void setUUID1(unsigned long long uuid);
+  void setUUID2(unsigned long long uuid);
+  void setUUID3(unsigned long long uuid);
+  void setUUID4(unsigned long long uuid);
 };
 
 #endif
