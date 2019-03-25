@@ -91,74 +91,116 @@ void BLE::send() {
   }
   // prefix1
   unsigned int p1 = (prefix1 & 0xFF000000) >> 24U;
+  char p1_str[32];
+  sprintf(p1_str,"%x",p1);
   unsigned int p2 = (prefix1 & 0x00FF0000) >> 16U;
+  char p2_str[32];
+  sprintf(p2_str,"%x",p2);
   unsigned int p3 = (prefix1 & 0x0000FF00) >> 8U;
+  char p3_str[32];
+  sprintf(p3_str,"%x",p3);
   unsigned int p4 = (prefix1 & 0x000000FF);
+  char p4_str[32];
+  sprintf(p4_str,"%x",p4);
   // prefix2
   unsigned int p5 = (prefix2 & 0xFF000000) >> 24U;
+  char p5_str[32];
+  sprintf(p5_str,"%x",p5);
   unsigned int p6 = (prefix2 & 0x00FF0000) >> 16U;
+  char p6_str[32];
+  sprintf(p6_str,"%x",p6);
   unsigned int p7 = (prefix2 & 0x0000FF00) >> 8U;
+  char p7_str[32];
+  sprintf(p7_str,"%x",p7);
   unsigned int p8 = (prefix2 & 0x000000FF);
+  char p8_str[32];
+  sprintf(p8_str,"%x",p8);
   // prefix3
   unsigned int  p9 = (prefix3 & 0xFF00) >> 8U;
+  char p9_str[32];
+  sprintf(p9_str,"%x",p9);
   unsigned int  p10 = (prefix3 & 0x00FF);
+  char p10_str[32];
+  sprintf(p10_str,"%x",p10);
   // uuid1
   unsigned int u1 = (uuid1 & 0xFF000000) >> 24U;
+  char u1_str[32];
+  sprintf(u1_str,"%x",u1);
   unsigned int u2 = (uuid1 & 0x00FF0000) >> 16U;
+  char u2_str[32];
+  sprintf(u2_str,"%x",u2);
   unsigned int u3 = (uuid1 & 0x0000FF00) >> 8U;
+  char u3_str[32];
+  sprintf(u3_str,"%x",u3);
   unsigned int u4 = (uuid1 & 0x000000FF);
+  char u4_str[32];
+  sprintf(u4_str,"%x",u4);
   // uuid2
   unsigned int u5 = (uuid2 & 0xFF000000) >> 24U;
+  char u5_str[32];
+  sprintf(u5_str,"%x",u5);
   unsigned int u6 = (uuid2 & 0x00FF0000) >> 16U;
+  char u6_str[32];
+  sprintf(u6_str,"%x",u6);
   unsigned int u7 = (uuid2 & 0x0000FF00) >> 8U;
+  char u7_str[32];
+  sprintf(u7_str,"%x",u7);
   unsigned int u8 = (uuid2 & 0x000000FF);
+  char u8_str[32];
+  sprintf(u8_str,"%x",u8);
   // uuid3
   unsigned int u9 = (uuid3 & 0xFF000000) >> 24U;
+  char u9_str[32];
+  sprintf(u9_str,"%x",u9);
   unsigned int u10 = (uuid3 & 0x00FF0000) >> 16U;
+  char u10_str[32];
+  sprintf(u10_str,"%x",u10);
   unsigned int u11 = (uuid3 & 0x0000FF00) >> 8U;
+  char u11_str[32];
+  sprintf(u11_str,"%x",u11);
   unsigned int u12 = (uuid3 & 0x000000FF);
+  char u12_str[32];
+  sprintf(u12_str,"%x",u12);
   //uuid4
   unsigned int u13 = (uuid4 & 0xFF000000) >> 24U;
+  char u13_str[32];
+  sprintf(u13_str,"%x",u13);
   unsigned int u14 = (uuid4 & 0x00FF0000) >> 16U;
+  char u14_str[32];
+  sprintf(u14_str,"%x",u14);
   unsigned int u15 = (uuid4 & 0x0000FF00) >> 8U;
+  char u15_str[32];
+  sprintf(u15_str,"%x",u15);
   unsigned int u16 = (uuid4 & 0x000000FF);
+  char u16_str[32];
+  sprintf(u16_str,"%x",u16);
   // major
   unsigned int maj1 = (maj & 0xFF00) >> 8U;
+  char maj1_str[32];
+  sprintf(maj1_str,"%x",maj1);
   unsigned int maj2 = (maj & 0x00FF);
+  char maj2_str[32];
+  sprintf(maj2_str,"%x",maj2);
   // minor
   unsigned int min1 = (min & 0xFF00) >> 8U;
+  char min1_str[32];
+  sprintf(min1_str,"%x",min1);
   unsigned int min2 = (min & 0x00FF);
-  // 1e 02 01 1a 1a ff FF FF 02 15
-  /*stringStream << "sudo hcitool -i hci0 cmd 0x08 0x0008 ' " \
-  << std::hex << p1 << " " << p2 << " " << p3 << " " << p4 << " " << p5 << " " \
-  << p6 << " " << p7 << " " << p8 << " " << p9 << " " << p10 << " " \
-  << u1 << " " << u2 << " " << u3 << " " << u4 << " " \
-  << u5 << " " << u6 << " " << u7 << " " << u8 << " " \
-  << u9 << " " << u10 << " " << u11 << " " << u12 << " " \
-  << u13 << " " << u14 << " " << u15 << " " << u16 << " " \
-  << maj1 << " " << maj2 << " " << min1 << " " << min2 << " " << tx << " 00' > dump.txt &";
-  cmd = stringStream.str();*/
-  char cmd[1000];
-  sprintf(cmd,"sudo hcitool -i hci0 cmd 0x08 0x0008 ' %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x 00 ' > dump.txt &", \
-		  p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,\
-		  u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15,u16,\
-		  maj1,maj2,min1,min2,(unsigned)tx);
-  execl("./",cmd,NULL);
-  /*stringStream << "sudo /home/pi/shiny-engine/bash/ble_send.sh ' " \
-  << std::hex << p1 << " " << p2 << " " << p3 << " " << p4 << " " << p5 << " " \
-  << p6 << " " << p7 << " " << p8 << " " << p9 << " " << p10 << " " \
-  << u1 << " " << u2 << " " << u3 << " " << u4 << " " \
-  << u5 << " " << u6 << " " << u7 << " " << u8 << " " \
-  << u9 << " " << u10 << " " << u11 << " " << u12 << " " \
-  << u13 << " " << u14 << " " << u15 << " " << u16 << " " \
-  << maj1 << " " << maj2 << " " << min1 << " " << min2 << " " << tx << " 00' > dump.txt";
-  cmd = stringStream.str();
-  system(cmd.c_str());*/
+  char min2_str[32];
+  sprintf(min2_str,"%x",min2);
+  // Send the packet
+  pid_t pid;
+  if ((pid=fork()) == 0) {
+    execlp("/usr/bin/hcitool","hcitool","-i","hci0","cmd","0x08","0x0008",\
+    p1_str,p2_str,p3_str,p4_str,p5_str,p6_str,p7_str,p8_str,p9_str,p10_str,\
+    u1_str,u2_str,u3_str,u4_str,u5_str,u6_str,u7_str,u8_str,u9_str,u10_str,u11_str,u12_str,u13_str,u14_str,u15_str,u16_str,\
+    maj1_str,maj2_str,min1_str,min2_str,(char*)NULL);
+  }
 }
 
 void BLE::scan() {
-  system("sudo hcitool lescan --duplicates > /home/pi/shiny-engine/a.txt &");
-  system("sudo hcidump --raw > /home/pi/shiny-engine/b.txt &");
+  system("hcitool lescan --duplicates > /home/pi/shiny-engine/a.txt &");
+  system("hcidump --raw > /home/pi/shiny-engine/b.txt &");
   unsigned long cnt = 0;
   auto start = std::chrono::high_resolution_clock::now();
   auto end = start;

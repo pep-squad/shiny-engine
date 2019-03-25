@@ -18,13 +18,11 @@
 #include "TCS3200.h"
 #include "HCSR04.h"
 
-//////////////////COMMS///////////////////////////
 typedef struct DataPacket {
   unsigned long long eta;
   unsigned long long position;
   unsigned long long serial;
   unsigned long majorFlag;
-
 } Packet;
 
 void scanThread(BLE &ble) {
@@ -33,30 +31,24 @@ void scanThread(BLE &ble) {
 
 bool compareETA(std::pair<long unsigned int, DataPacket> one, std::pair<long unsigned int, DataPacket> two){
   if(one.second.eta == two.second.eta){
-	  if(one.second.serial < two.second.serial){
-		  return true;
-	  }
-	  else{
-		  return false;
-	  }
-  }
-  else if(one.second.eta < two.second.eta){
-	 return true;
-  }	
-  else{
+    if(one.second.serial < two.second.serial){
+      return true;
+    } else {
+      return false;
+    }
+  } else if (one.second.eta < two.second.eta){
+   return true;
+  } else {
     return false;
   }
 }
 
 void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
-
   //list for ranking
   std::list<std::pair<unsigned long, Packet>> positionRankings;
-
   for(auto const& x: *botMap){
     positionRankings.push_back(x);
   }
-
   //add local to rankings list
   std::pair<unsigned long, Packet> local;
   local.first = ble->getUUID1();
@@ -64,37 +56,30 @@ void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
   local.second.position = ble->getUUID3();
   local.second.serial = ble->getUUID1();
   positionRankings.push_back(local);
-
   //sort list
   positionRankings.sort(compareETA);
-
   //update positions and update map
   unsigned long long rank = 0;
   auto previous = positionRankings.front();
   for(auto & x: positionRankings){
     rank++;
-
-    if (x.first != local.first){
+    if (x.first != local.first) {
       x.second.position = rank;
       botMap->erase(x.first);
       botMap->insert(std::pair<unsigned long,Packet>(x.first, x.second));
-    }
-    else{
+    } else {
       //set threshold flag
       //if within 3 seconds of bot ahead of itself, slow down.
-      if(local.second.position > 1){
+      if (local.second.position > 1) {
         //find previous list element
-        if((local.second.position - previous.second.position) <= 3000){
+        if ((local.second.position - previous.second.position) <= 3000) {
           ble->setMajor(1);
-        }
-        else{
+        } else {
           ble->setMajor(0);
         }
-      }
-      else{
+      } else {
         ble->setMajor(0);
       }
-
       ble->setUUID3(rank);
     }
     previous = x;
@@ -235,26 +220,26 @@ void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor
     rpm_time = std::chrono::duration_cast<std::chrono::milliseconds>(finish - deltaT).count();
     if (rpm_time > 15) {
       for (unsigned i = 0; i < 4; i++) {
-	rpm[i][2] = rpm[i][1];
-	rpm[i][1] = rpm[i][0];
-	rpm[i][0] = motors[i].getCount()/(rpm_time/1000 * scale)*60;
-	float rpm_avg = (rpm[i][0] + rpm[i][1])/2;
+        rpm[i][2] = rpm[i][1];
+        rpm[i][1] = rpm[i][0];
+        rpm[i][0] = motors[i].getCount()/(rpm_time/1000 * scale)*60;
+        float rpm_avg = (rpm[i][0] + rpm[i][1])/2;
         motors[i].setRpm(rpm_avg);
         motorPins[i].posCount += motors[i].getCount();
         motors[i].setCount(0);
         if (rpm_avg > motorPins[i].rpm) {
           if ((rpm_avg-5) > motorPins[i].rpm) {
-	      motorPins[i].strength -= 2;
-	  } else {
+        motorPins[i].strength -= 2;
+    } else {
               motorPins[i].strength--;
-	  }
+    }
         }
         else if(rpm_avg < motorPins[i].rpm) {
             if ((rpm_avg+5) < motorPins[i].rpm) {
-	        motorPins[i].strength += 2;
-	    } else {
+          motorPins[i].strength += 2;
+      } else {
                 motorPins[i].strength++;
-	    }
+      }
         }
         if (motorPins[i].strength > 0 ) {
           motors[i].forward(motorPins[i].strength);
@@ -267,13 +252,6 @@ void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor
      deltaT = std::chrono::high_resolution_clock::now();
     }
     finish = std::chrono::high_resolution_clock::now();
-  }
-
-  for (unsigned i = 0; i < 4; i++) {
-    std::cout<<"Encoder: "<< i+1 <<std::endl;
-    std::cout<<motors[i].getCount()<<std::endl;
-    // std::cout<<encError[i]<<std::endl;
-    printf("%f\n", motors[i].getRpm());
   }
 
   for (unsigned i = 0; i < motors.size(); i++) {
@@ -327,7 +305,7 @@ float timeToIntersection(int remTurns, float Vy, int currCount) {
 }
 
 int main(int argc, char const *argv[]) {
-
+  float time;
   /*MOTOR SETUP*/
   float Vx = 0.0; //[mm/s]
   float Vy = 0.0;  //[mm/s] standard forward velocity for robot
@@ -393,10 +371,9 @@ int main(int argc, char const *argv[]) {
   float desired_Vy = 130.0;
   float distance = 0;
   int turnCount = 0;
-
   /*COMMS SETUP*/
-  system("sudo sh bash/ble_setup.sh");
-  FILE *pipe = popen("sudo cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16-", "r");
+  system("sh bash/ble_setup.sh");
+  FILE *pipe = popen("cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16-", "r");
   std::map<unsigned long, Packet> m;
   std::array<char, 128> buffer;
   std::string sno;
@@ -408,35 +385,13 @@ int main(int argc, char const *argv[]) {
   std::istringstream iss(sno);
   unsigned long usno;
   iss >> std::hex >> usno;
-  BLE ble (0x1e02011a, 0x1aff4c00, 0x0215, usno, 0xFFFF, 0x0, 0x0, 0xde, 0x6f, 0x78);
-  //std::thread v;
-  //v = std::thread(scanThread, std::ref(ble));
+  BLE ble (0x1e02011a, 0x1aff4c00, 0x0215, usno, 0x0, 0x0, 0x0, 0xde, 0x6f, 0x78);
+  // std::thread v;
+  // v = std::thread(scanThread, std::ref(ble));
   ble.send();
-
   auto lastSend = std::chrono::high_resolution_clock::now();
-
   /*------CONTROL LOOP------*/
   for (unsigned int cnt = 0; cnt < 8; cnt++) {
-
-  	/*COMMS routine for determining desired Vy*/
-
-    /*Recieve messages*/
-    /*
-    bool empty = true;
-    while (!ble.packets.empty()) {
-      empty = false;
-      BLE t = ble.packets.front();
-      ble.packets.pop();
-      unsigned long sno = t.getUUID1();
-      // { eta, position }
-      Packet test = { t.getUUID2(), t.getUUID3() ,sno};
-      m.erase(sno);
-      m.insert(std::pair<unsigned long,Packet>(sno, test));
-    }
-
-    finish = std::chrono::high_resolution_clock::now();
-    calculatePosition(&m,&ble);*/
-
   	/*Execute Motor control*/
     Vy = desired_Vy;
     Vx = 0.0;
@@ -468,22 +423,22 @@ int main(int argc, char const *argv[]) {
           if (corner > 10) {
             red_flag = false;
           }
-	  std::cout << "RED\n";
+          // std::cout << "RED\n";
           break;
         case GREEN:
           corner++;
           x = 0;
           green_flag = false;
-	  std::cout << "GREEN\n";
+          // std::cout << "GREEN\n";
           break;
         case WHITE:
           corner++;
           x = 0;
           white_flag = false;
-	  std::cout << "WHITE\n";
+          // std::cout << "WHITE\n";
           break;
         default:
-	  std::cout << "NONE\n";
+          // std::cout << "NONE\n";
           break;
       }
       if (!white_flag) {
@@ -511,22 +466,30 @@ int main(int argc, char const *argv[]) {
         red_flag = false;
       }
       int remTurns = 3-turnCount;
-      float time = timeToIntersection(remTurns, Vy, total);
-
-    /*Construct updated send message*/
+      time = timeToIntersection(remTurns, Vy, total);
+      /*Construct updated send message*/
       auto currentTime = std::chrono::high_resolution_clock::now();
-      
       if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastSend).count() > 1000){
-	      ble.setUUID2((int(time*1000.0)));
-	      //ble.setUUID3((5678));
-	      //ble.setUUID4(6666);
-      	      auto t1 = std::chrono::high_resolution_clock::now();
-	      ble.send();
-      	      auto t2 = std::chrono::high_resolution_clock::now();
-	      auto t3 = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
-	      lastSend = std::chrono::high_resolution_clock::now();
-	      std::cout << " SEND PACKET " << t3;
-  	  }
+        ble.setUUID2((int(time*1000.0)));
+        ble.send();
+        lastSend = std::chrono::high_resolution_clock::now();
+      }
+      /*COMMS routine for determining desired Vy*/
+      /*while (!ble.packets.empty()) {
+        BLE t = ble.packets.front();
+        ble.packets.pop();
+        unsigned long sno = t.getUUID1();
+        // { eta, position }
+        Packet test = { t.getUUID2(), t.getUUID3() ,sno};
+        m.erase(sno);
+        m.insert(std::pair<unsigned long,Packet>(sno, test));
+        std::cout << "PACKET\n";
+      }*/
+      // calculatePosition(&m,&ble);
+      // for(auto const& entry: m){
+      //   std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
+      // }
+      // std::cout << "Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
       usleep(10);
     }
     Turn turn = turns[turnCount];
