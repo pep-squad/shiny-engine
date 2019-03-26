@@ -145,10 +145,11 @@ long map(long x, long in_min, long in_max, long out_min, long out_max) {
 }
 
 float etaVy(float Vy, std::pair<unsigned long, Packet> entry, BLE ble) {
+  std::cout << "Their time = " << entry.second.eta << " : My time = " << ble.getUUID2() << std::endl;
   float newVy = Vy;
   if (ble.getUUID3() < entry.second.position) {
-    float diff = ble.getUUID2() - entry.second.eta;
-    std::cout << "Difference = " << diff << std::endl;
+    int diff = ble.getUUID2() - entry.second.eta;
+    //std::cout << "Difference = " << diff << std::endl;
     if (diff < 0 || diff > 3) {
       newVy = Vy;
     } else {
@@ -416,6 +417,8 @@ int main(int argc, char const *argv[]) {
       motors[i].stop();
       motorPins[i].posCount = 0;
     }
+    ble.setUUID2(0xFFFFFF);
+    ble.send();
     motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
     std::cout << "Continue(y/n)? ";
     std::cin >> ss;

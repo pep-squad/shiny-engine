@@ -212,7 +212,7 @@ void BLE::scan() {
       start = end;
       cnt = 0;
     }
-    usleep(10000000);
+    usleep(1000000);
     end = std::chrono::high_resolution_clock::now();
   }
 }
