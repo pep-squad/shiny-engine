@@ -13,6 +13,8 @@
 #include <chrono>
 #include <sys/wait.h>
 #include <csignal>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 class BLE {
 private:
@@ -61,7 +63,7 @@ public:
           unsigned long maj, unsigned long minor, unsigned long txPower);
 
   void scan();
-  void send();
+  pid_t send();
   unsigned long long getPrefix1();
   unsigned long long getPrefix2();
   unsigned long long getUUID1();
