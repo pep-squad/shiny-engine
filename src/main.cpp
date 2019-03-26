@@ -150,7 +150,7 @@ float etaVy(float Vy, std::pair<unsigned long, Packet> entry, BLE ble) {
   if (ble.getUUID3() < entry.second.position) {
     int diff = ble.getUUID2() - entry.second.eta;
     //std::cout << "Difference = " << diff << std::endl;
-    if (diff < 0 || diff > 3) {
+    if (diff > -3 || diff > 3) {
       newVy = Vy;
     } else {
       float d = Vy*ble.getUUID3();
@@ -318,6 +318,7 @@ float timeToIntersection(int remTurns, float Vy, int currCount) {
   int straights = remTurns + 1;
   float remDistance = ((620.0 * (float)straights) - currCount) / 2.29;
   float time = (remDistance / Vy) + (remTurns * 1.47);
+  time += std::time(nullptr);
   return time;
 }
 
@@ -386,7 +387,6 @@ int main(int argc, char const *argv[]) {
   // testUltra(ultra);
   // testColour(rgb);
   float desired_Vy = 130.0;
-  float timeBased_Vy = desired_Vy;
   float distance = 0;
   int turnCount = 0;
   /*COMMS SETUP*/
@@ -427,10 +427,8 @@ int main(int argc, char const *argv[]) {
       for (unsigned int cnt = 0; cnt < 8; cnt++) {
         /*Execute Motor control*/
         if ((turnCount%4) == 0) {
-          Vy = desired_Vy;
-          timeBased_Vy = Vy;
-        } else {
-          Vy = timeBased_Vy;
+          Vy = desired_Vy; // reset the speed to desired speed after going through intersection
+	  std::cout << "Vy after intersection is " << Vy << std::endl;
         }
         Vx = 0.0;
         Wz = 0.0;
@@ -493,11 +491,12 @@ int main(int argc, char const *argv[]) {
           time = timeToIntersection(remTurns, Vy, total);
           /*Construct updated send message*/
           auto currentTime = std::chrono::high_resolution_clock::now();
-          if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastSend).count() > 1000){
+          if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastSend).count() > 500){
             if (lastPid > 0) {
               kill(lastPid, SIGKILL);
             }
-            ble.setUUID2((int(time*1000.0)));
+            //ble.setUUID2((int(time*1000.0)));
+            ble.setUUID2(time);
             lastPid = ble.send();
             lastSend = std::chrono::high_resolution_clock::now();
           }
@@ -514,7 +513,6 @@ int main(int argc, char const *argv[]) {
           calculatePosition(&m,&ble);
           for(auto const& entry: m) {
             Vy = etaVy(Vy,entry,ble);
-            timeBased_Vy = Vy;
             //std::cout << "New Vy based on collision information " << Vy << std::endl;
             // std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
           }
