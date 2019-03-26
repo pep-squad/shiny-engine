@@ -412,6 +412,7 @@ int main(int argc, char const *argv[]) {
   do {
     for (unsigned i = 0; i < motors.size(); i++) {
       motorPins[i].rpm = 0;
+      motors[i].stop();
       motorPins[i].posCount = 0;
     }
     motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
@@ -512,7 +513,7 @@ int main(int argc, char const *argv[]) {
             //std::cout << "New Vy based on collision information " << Vy << std::endl;
             std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
           }
-          // std::cout << "Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
+          std::cout << "Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
           // Update the vehicle speed based on the ultrasonic sensor, rgb sensor, and the intersection collision avoidance
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
           for (unsigned i = 0; i < 4; i++) {
