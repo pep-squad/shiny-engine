@@ -148,6 +148,7 @@ float etaVy(float Vy, std::pair<unsigned long, Packet> entry, BLE ble) {
   float newVy = Vy;
   if (ble.getUUID3() < entry.second.position) {
     float diff = ble.getUUID2() - entry.second.eta;
+    std::cout << "Difference = " << diff << std::endl;
     if (diff < 0 || diff > 3) {
       newVy = Vy;
     } else {
@@ -314,7 +315,7 @@ void testColour (TCS3200 rgb) {
 
 float timeToIntersection(int remTurns, float Vy, int currCount) {
   int straights = remTurns + 1;
-  float remDistance = ((600 * (float)straights) - currCount) / 2.29;
+  float remDistance = ((620.0 * (float)straights) - currCount) / 2.29;
   float time = (remDistance / Vy) + (remTurns * 1.47);
   return time;
 }
@@ -511,9 +512,9 @@ int main(int argc, char const *argv[]) {
             Vy = etaVy(Vy,entry,ble);
             timeBased_Vy = Vy;
             //std::cout << "New Vy based on collision information " << Vy << std::endl;
-            std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
+            // std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
           }
-          std::cout << "Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
+          // std::cout << "Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
           // Update the vehicle speed based on the ultrasonic sensor, rgb sensor, and the intersection collision avoidance
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
           for (unsigned i = 0; i < 4; i++) {
