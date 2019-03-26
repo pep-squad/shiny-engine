@@ -145,17 +145,19 @@ long map(long x, long in_min, long in_max, long out_min, long out_max) {
 }
 
 float etaVy(float Vy, std::pair<unsigned long, Packet> entry, BLE ble) {
-  std::cout << "Their time = " << entry.second.eta << " : My time = " << ble.getUUID2() << std::endl;
   float newVy = Vy;
   if (ble.getUUID3() < entry.second.position) {
     int diff = ble.getUUID2() - entry.second.eta;
-    //std::cout << "Difference = " << diff << std::endl;
-    if (diff > -3 || diff > 3) {
+    printf("Time Difference = %d\n",diff);
+    if (diff < -5 || diff > 5) {
       newVy = Vy;
     } else {
-      float d = Vy*ble.getUUID3();
-      float tnew = ble.getUUID2() + 3;
+      std::time_t epoch = std::time(nullptr);
+      long int t = ble.getUUID2() - static_cast<long int>(epoch);
+      float d = Vy * t;
+      float tnew = static_cast<float>(t) + 5;
       newVy = d/tnew;
+      printf("t=%ld d=%f tnew=%f newVy=%f\n",t,d,tnew,newVy);
     }
   }
   return newVy;
@@ -314,16 +316,24 @@ void testColour (TCS3200 rgb) {
   }
 }
 
-float timeToIntersection(int remTurns, float Vy, int currCount) {
+long int timeToIntersection(int remTurns, float Vy, int currCount) {
   int straights = remTurns + 1;
+  long int time;
   float remDistance = ((620.0 * (float)straights) - currCount) / 2.29;
-  float time = (remDistance / Vy) + (remTurns * 1.47);
-  time += std::time(nullptr);
+  float time_f;
+  time_f = (remDistance / Vy) + (remTurns * 1.47);
+  if (time_f == 0.0) {
+      time = 0;
+  } else {
+      std::time_t epoch = std::time(nullptr);
+      long int epoch_int = static_cast<long int>(epoch);
+      time = static_cast<long int>(time_f) + epoch_int;
+  }
   return time;
 }
 
 int main(int argc, char const *argv[]) {
-  float time;
+  long int time;
   /*MOTOR SETUP*/
   float Vx = 0.0; //[mm/s]
   float Vy = 0.0;  //[mm/s] standard forward velocity for robot
@@ -489,14 +499,15 @@ int main(int argc, char const *argv[]) {
           }
           int remTurns = 3-turnCount;
           time = timeToIntersection(remTurns, Vy, total);
+	  //std::cout << "Time=" << time << " Vy=" << Vy << std::endl;
+	  //printf("Time=%f Vy=%f\n",time,Vy);
+	  ble.setUUID2(int(time));
           /*Construct updated send message*/
           auto currentTime = std::chrono::high_resolution_clock::now();
           if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastSend).count() > 500){
             if (lastPid > 0) {
               kill(lastPid, SIGKILL);
             }
-            //ble.setUUID2((int(time*1000.0)));
-            ble.setUUID2(time);
             lastPid = ble.send();
             lastSend = std::chrono::high_resolution_clock::now();
           }
@@ -513,10 +524,9 @@ int main(int argc, char const *argv[]) {
           calculatePosition(&m,&ble);
           for(auto const& entry: m) {
             Vy = etaVy(Vy,entry,ble);
-            //std::cout << "New Vy based on collision information " << Vy << std::endl;
-            // std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
+            std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
           }
-          // std::cout << "Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
+          std::cout << "This Bot Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
           // Update the vehicle speed based on the ultrasonic sensor, rgb sensor, and the intersection collision avoidance
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
           for (unsigned i = 0; i < 4; i++) {
