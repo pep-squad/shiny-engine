@@ -434,7 +434,7 @@ int main(int argc, char const *argv[]) {
     std::cout << "Continue(y/n)? ";
     std::cin >> ss;
     if (ss == 'y') {
-      for (unsigned int cnt = 0; cnt < 8; cnt++) {
+      for (unsigned int cnt = 0; cnt < 9; cnt++) {
         /*Execute Motor control*/
         if ((turnCount%4) == 0) {
           Vy = desired_Vy; // reset the speed to desired speed after going through intersection
@@ -458,10 +458,12 @@ int main(int argc, char const *argv[]) {
           total = 0.0;
           white_flag = true;
           green_flag = true;
-          float dist = ultra.distance();
-          Vy = distanceVy(Vy, desired_Vy, dist, distance);
+	  if ((turnCount%4)!=3) {
+              float dist = ultra.distance();
+              Vy = distanceVy(Vy, desired_Vy, dist, distance);
+              distance = dist;
+	  }
           // std::cout << "distance " << dist << " - speed " << Vy << std::endl;
-          distance = dist;
           currColour = rgb.scan();
           switch (currColour) {
             case RED:
@@ -521,12 +523,14 @@ int main(int argc, char const *argv[]) {
             m.erase(sno);
             m.insert(std::pair<unsigned long,Packet>(sno, test));
           }
-          calculatePosition(&m,&ble);
-          for(auto const& entry: m) {
-            Vy = etaVy(Vy,entry,ble);
-            std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
-          }
-          std::cout << "This Bot Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
+	  if ((turnCount%4)!=3) {
+            calculatePosition(&m,&ble);
+            for(auto const& entry: m) {
+              Vy = etaVy(Vy,entry,ble);
+              std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
+            }
+            std::cout << "This Bot Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
+	  }
           // Update the vehicle speed based on the ultrasonic sensor, rgb sensor, and the intersection collision avoidance
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
           for (unsigned i = 0; i < 4; i++) {
