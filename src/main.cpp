@@ -146,7 +146,7 @@ long map(long x, long in_min, long in_max, long out_min, long out_max) {
 }
 
 float etaVy(float Vy, std::pair<unsigned long, Packet> pckt, BLE ble) {
-  float newVy;
+  float newVy = Vy;
   if (ble.getUUID1() < pckt.second.serial) {
     int diff = ble.getUUID2() - pckt.second.eta;
     if (diff <= -3 || diff >= 3) {
