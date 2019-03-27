@@ -146,16 +146,16 @@ long map(long x, long in_min, long in_max, long out_min, long out_max) {
 }
 
 float etaVy(float Vy, std::pair<unsigned long, Packet> pckt, BLE ble) {
-  float newVy = Vy;
+  float newVy;
   if (ble.getUUID1() < pckt.second.serial) {
     int diff = ble.getUUID2() - pckt.second.eta;
-    if (diff < -5 || diff > 5) {
+    if (diff <= -3 || diff >= 3) {
       newVy = Vy;
     } else {
       std::time_t epoch = std::time(nullptr);
       long int t = ble.getUUID2() - static_cast<long int>(epoch);
       float d = Vy * t;
-      float tnew = static_cast<float>(t) + 5;
+      float tnew = static_cast<float>(t) + 3;
       newVy = d/tnew;
     }
   }
@@ -396,6 +396,7 @@ int main(int argc, char const *argv[]) {
   // testUltra(ultra);
   // testColour(rgb);
   float desired_Vy = 130.0;
+  float max_Vy = desired_Vy;
   float distance = 0;
   int turnCount = 0;
   /*COMMS SETUP*/
@@ -437,7 +438,7 @@ int main(int argc, char const *argv[]) {
         /*Execute Motor control*/
         if ((turnCount%4) == 0) {
           Vy = desired_Vy; // reset the speed to desired speed after going through intersection
-	  //std::cout << "Vy after intersection is " << Vy << std::endl;
+	  max_Vy = desired_Vy;
         }
         Vx = 0.0;
         Wz = 0.0;
@@ -459,10 +460,9 @@ int main(int argc, char const *argv[]) {
           green_flag = true;
 	  if ((turnCount%4)!=3) {
               float dist = ultra.distance();
-              Vy = distanceVy(Vy, desired_Vy, dist, distance);
+              Vy = distanceVy(Vy, max_Vy, dist, distance);
               distance = dist;
 	  }
-          // std::cout << "distance " << dist << " - speed " << Vy << std::endl;
           currColour = rgb.scan();
           switch (currColour) {
             case RED:
@@ -470,22 +470,18 @@ int main(int argc, char const *argv[]) {
             if (corner > 10) {
               red_flag = false;
             }
-            // std::cout << "RED\n";
             break;
             case GREEN:
             corner++;
             x = 0;
             green_flag = false;
-            // std::cout << "GREEN\n";
             break;
             case WHITE:
             corner++;
             x = 0;
             white_flag = false;
-            // std::cout << "WHITE\n";
             break;
             default:
-            // std::cout << "NONE\n";
             break;
           }
           if (!white_flag) {
@@ -499,9 +495,7 @@ int main(int argc, char const *argv[]) {
             Wz = 0.0;
           }
           int remTurns = 3-turnCount;
-          time = timeToIntersection(remTurns, Vy, total);
-	  //std::cout << "Time=" << time << " Vy=" << Vy << std::endl;
-	  //printf("Time=%f Vy=%f\n",time,Vy);
+	  time = timeToIntersection(remTurns, Vy, total);
 	  ble.setUUID2(int(time));
           /*Construct updated send message*/
           auto currentTime = std::chrono::high_resolution_clock::now();
@@ -517,7 +511,6 @@ int main(int argc, char const *argv[]) {
             BLE t = ble.packets.front();
             ble.packets.pop();
             unsigned long sno = t.getUUID1();
-            // { eta, position }
             Packet test = { t.getUUID2(), sno};
             m.erase(sno);
             m.insert(std::pair<unsigned long,Packet>(sno, test));
@@ -526,15 +519,17 @@ int main(int argc, char const *argv[]) {
             // calculatePosition(&m,&ble);
             for(auto const& pckt: m) {
               Vy = etaVy(Vy,pckt,ble);
-              std::cout << "         Serial: " << pckt.first << " ETA: " << pckt.second.eta << std::endl;
+	      max_Vy = Vy;
+              std::cout << "         Serial: " << pckt.first << " ETA: " << pckt.second.eta << " new (Vy)   " << std::endl;
+	      m.erase(pckt.first);
             }
-            std::cout << "This Bot Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << "Speed (Vy) " << Vy << std::endl;
+            std::cout << "This Bot Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Speed (Vy) " << Vy << std::endl;
 	  }
           // Update the vehicle speed based on the ultrasonic sensor, rgb sensor, and the intersection collision avoidance
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+	  total = 0.0;
           for (unsigned i = 0; i < 4; i++) {
             motorPins[i].rpm = desired_rpm[i];
-            // motorPins[i].posCount = 0;
             if (motorPins[i].posCount < 0) {
               total += (motorPins[i].posCount*-1);
             } else {
@@ -542,10 +537,8 @@ int main(int argc, char const *argv[]) {
             }
           }
           total /= 4;
-	  //std::cout << "total count " << total << std::endl;
           if (total >= 600.0) {
             red_flag = false;
-	    // std::cout << "GET OUT\n";
           }
           usleep(10);
         }
@@ -554,9 +547,9 @@ int main(int argc, char const *argv[]) {
         if (turn == LEFT_TURN) {
           int CornerRad = 100;
           float delay_time = 0.0;
-          Vy = 100;
+          float turn_Vy = 100.0;
           Vx = 0.0;
-          trajectoryPlan(Wz, Vy, CornerRad, delay_time,85.0);
+          trajectoryPlan(Wz, turn_Vy, CornerRad, delay_time,85.0);
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
           for (unsigned i = 0; i < 4; i++) {
             motorPins[i].rpm = desired_rpm[i];
@@ -569,9 +562,9 @@ int main(int argc, char const *argv[]) {
         } else if (turn == RIGHT_TURN) {
           int CornerRad = 100;
           float delay_time = 0.0;
-          Vy = 100;
+          float turn_Vy = 100.0;
           Vx = 0.0;
-          trajectoryPlan(Wz, Vy, CornerRad, delay_time,-85.0);
+          trajectoryPlan(Wz, turn_Vy, CornerRad, delay_time,-85.0);
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
           for (unsigned i = 0; i < 4; i++) {
             motorPins[i].rpm = desired_rpm[i];
