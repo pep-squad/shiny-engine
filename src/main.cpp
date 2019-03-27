@@ -69,10 +69,10 @@ void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
       botMap->insert(std::pair<unsigned long,Packet>(x.first, x.second));
     } else {
       //set threshold flag
-      //if within 3 seconds of bot ahead of itself, slow down.
+      //if within 5 seconds of bot ahead of itself, slow down.
       if (local.second.position > 1) {
         //find previous list element
-        if ((local.second.position - previous.second.position) <= 3000) {
+        if ((local.second.position - previous.second.position) <= 5) {
           ble->setMajor(1);
         } else {
           ble->setMajor(0);
