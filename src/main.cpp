@@ -20,9 +20,9 @@
 
 typedef struct DataPacket {
   unsigned long long eta;
-  unsigned long long position;
+  // unsigned long long position;
   unsigned long long serial;
-  unsigned long majorFlag;
+  // unsigned long majorFlag;
 } Packet;
 
 void scanThread(BLE &ble) {
@@ -43,7 +43,7 @@ bool compareETA(std::pair<long unsigned int, DataPacket> one, std::pair<long uns
   }
 }
 
-void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
+/*void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
   //list for ranking
   std::list<std::pair<unsigned long, Packet>> positionRankings;
   for(auto const& x: *botMap){
@@ -72,7 +72,8 @@ void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
       //if within 5 seconds of bot ahead of itself, slow down.
       if (local.second.position > 1) {
         //find previous list element
-        if ((local.second.position - previous.second.position) <= 5) {
+	float diff = local.second.position - previous.second.position;
+        if (diff < 5 && diff > -5) {
           ble->setMajor(1);
         } else {
           ble->setMajor(0);
@@ -84,7 +85,7 @@ void calculatePosition(std::map<unsigned long, Packet>* botMap,BLE* ble){
     }
     previous = x;
   }
-}
+}*/
 
 ///////////////////MOTOR///////////////////////////
 
@@ -144,11 +145,10 @@ long map(long x, long in_min, long in_max, long out_min, long out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-float etaVy(float Vy, std::pair<unsigned long, Packet> entry, BLE ble) {
+float etaVy(float Vy, std::pair<unsigned long, Packet> pckt, BLE ble) {
   float newVy = Vy;
-  if (ble.getUUID3() < entry.second.position) {
-    int diff = ble.getUUID2() - entry.second.eta;
-    printf("Time Difference = %d\n",diff);
+  if (ble.getUUID1() < pckt.second.serial) {
+    int diff = ble.getUUID2() - pckt.second.eta;
     if (diff < -5 || diff > 5) {
       newVy = Vy;
     } else {
@@ -157,7 +157,6 @@ float etaVy(float Vy, std::pair<unsigned long, Packet> entry, BLE ble) {
       float d = Vy * t;
       float tnew = static_cast<float>(t) + 5;
       newVy = d/tnew;
-      printf("t=%ld d=%f tnew=%f newVy=%f\n",t,d,tnew,newVy);
     }
   }
   return newVy;
@@ -438,7 +437,7 @@ int main(int argc, char const *argv[]) {
         /*Execute Motor control*/
         if ((turnCount%4) == 0) {
           Vy = desired_Vy; // reset the speed to desired speed after going through intersection
-	  std::cout << "Vy after intersection is " << Vy << std::endl;
+	  //std::cout << "Vy after intersection is " << Vy << std::endl;
         }
         Vx = 0.0;
         Wz = 0.0;
@@ -519,17 +518,17 @@ int main(int argc, char const *argv[]) {
             ble.packets.pop();
             unsigned long sno = t.getUUID1();
             // { eta, position }
-            Packet test = { t.getUUID2(), t.getUUID3() ,sno};
+            Packet test = { t.getUUID2(), sno};
             m.erase(sno);
             m.insert(std::pair<unsigned long,Packet>(sno, test));
           }
 	  if ((turnCount%4)!=3) {
-            calculatePosition(&m,&ble);
-            for(auto const& entry: m) {
-              Vy = etaVy(Vy,entry,ble);
-              std::cout << "Serial: " << entry.first << " ETA: " << entry.second.eta << " Position: " << entry.second.position << " MajFlag: "<< entry.second.majorFlag << std::endl;
+            // calculatePosition(&m,&ble);
+            for(auto const& pckt: m) {
+              Vy = etaVy(Vy,pckt,ble);
+              std::cout << "         Serial: " << pckt.first << " ETA: " << pckt.second.eta << std::endl;
             }
-            std::cout << "This Bot Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Position: " << ble.getUUID3() << " MajFlag: "<< ble.getMajor() << std::endl;
+            std::cout << "This Bot Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << "Speed (Vy) " << Vy << std::endl;
 	  }
           // Update the vehicle speed based on the ultrasonic sensor, rgb sensor, and the intersection collision avoidance
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
