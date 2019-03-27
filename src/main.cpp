@@ -141,22 +141,29 @@ void trajectoryPlan(float &Wz, float Vy, float rad, float &delay_time,float turn
     }
 }
 
-long map(long x, long in_min, long in_max, long out_min, long out_max) {
+long map(long x, long in_min, long in_max, long out_min, long out_max, long int time) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-float etaVy(float Vy, std::pair<unsigned long, Packet> pckt, BLE ble) {
+float etaVy(float Vy, std::pair<unsigned long, Packet> pckt, BLE &ble, float time) {
   float newVy = Vy;
+  if (pckt.second.serial == pckt.second.eta) {
+      return newVy;
+  }
   if (ble.getUUID1() < pckt.second.serial) {
     int diff = ble.getUUID2() - pckt.second.eta;
-    if (diff < -4 || diff > 4) {
+    if (diff <= -3 || diff >= 3) {
       newVy = Vy;
     } else {
-      std::time_t epoch = std::time(nullptr);
-      long int t = ble.getUUID2() - static_cast<long int>(epoch);
-      float d = Vy * t;
-      float tnew = static_cast<float>(t) + 5;
+      float d = Vy * time;
+      float tnew = time + diff;
+      if (diff < 0.0) { // speed up the car
+          tnew -= 1;
+      } else { // slow down the car
+          tnew += 1;
+      }
       newVy = d/tnew;
+      printf("time=%f d=%f tnew=%f newVy=%f\n",time,d,tnew,newVy);
     }
   }
   return newVy;
@@ -315,24 +322,16 @@ void testColour (TCS3200 rgb) {
   }
 }
 
-long int timeToIntersection(int remTurns, float Vy, int currCount) {
+float timeToIntersection(int remTurns, float Vy, int currCount) {
   int straights = remTurns + 1;
-  long int time;
   float remDistance = ((620.0 * (float)straights) - currCount) / 2.29;
   float time_f;
   time_f = (remDistance / Vy) + (remTurns * 1.47);
-  if (time_f == 0.0) {
-      time = 0;
-  } else {
-      std::time_t epoch = std::time(nullptr);
-      long int epoch_int = static_cast<long int>(epoch);
-      time = static_cast<long int>(time_f) + epoch_int;
-  }
-  return time;
+  return time_f;
 }
 
 int main(int argc, char const *argv[]) {
-  long int time;
+  float time;
   /*MOTOR SETUP*/
   float Vx = 0.0; //[mm/s]
   float Vy = 0.0;  //[mm/s] standard forward velocity for robot
@@ -398,7 +397,7 @@ int main(int argc, char const *argv[]) {
   float desired_Vy = 130.0;
   float max_Vy = desired_Vy;
   float distance = 0;
-  int turnCount = 1;
+  int turnCount = 0;
   /*COMMS SETUP*/
   system("sh bash/ble_setup.sh");
   FILE *pipe = popen("cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16-", "r");
@@ -441,7 +440,7 @@ int main(int argc, char const *argv[]) {
         motorPins[i].rpm = desired_rpm[i];
         motorPins[i].posCount = 0;
       }
-      for (unsigned int cnt = 0; cnt < 9; cnt++) {
+      for (unsigned int cnt = 0; cnt < 8; cnt++) {
         /*Execute Motor control*/
         if ((turnCount%4) == 0) {
           Vy = desired_Vy; // reset the speed to desired speed after going through intersection
@@ -504,8 +503,12 @@ int main(int argc, char const *argv[]) {
             Wz = 0.0;
           }
           int remTurns = 3-turnCount;
-          time = timeToIntersection(remTurns, Vy, total);
-          ble.setUUID2(int(time));
+          std::time_t epoch = std::time(nullptr);
+          long int epoch_int = static_cast<long int>(epoch);
+	  time = timeToIntersection(remTurns, Vy, total);
+	  long int time_l = static_cast<long int>(time);
+	  time_l += epoch_int;
+          ble.setUUID2(time_l);
           /*Construct updated send message*/
           auto currentTime = std::chrono::high_resolution_clock::now();
           if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastSend).count() > 500){
@@ -525,21 +528,8 @@ int main(int argc, char const *argv[]) {
             m.insert(std::pair<unsigned long,Packet>(sno, test));
           }
           if ((turnCount%4)!=3) {
-            time = timeToIntersection(remTurns, Vy, total);
-            ble.setUUID2(int(time));
-            total = 0.0;
-            for (unsigned i = 0; i < 4; i++) {
-              motorPins[i].rpm = desired_rpm[i];
-              if (motorPins[i].posCount < 0) {
-                total += (motorPins[i].posCount*-1);
-              } else {
-                total += motorPins[i].posCount;
-              }
-            }
-            total /= 4;
-            // calculatePosition(&m,&ble);
             for(auto const& pckt: m) {
-              Vy = etaVy(Vy,pckt,ble);
+              Vy = etaVy(Vy,pckt,std::ref(ble),time);
               max_Vy = Vy;
               std::cout << "         Serial: " << pckt.first << " ETA: " << pckt.second.eta << " new (Vy)   " << Vy << std::endl;
 
@@ -598,16 +588,6 @@ int main(int argc, char const *argv[]) {
           }
         }
         turnCount = (turnCount+1)%4;
-        int remTurns = 3-turnCount;
-        if (lastPid > 0) {
-          kill(lastPid, SIGKILL);
-        }
-        // come back here
-        total = 0.0;
-        time = timeToIntersection(remTurns, Vy, total);
-        ble.setUUID2(int(time));
-        lastSend = std::chrono::high_resolution_clock::now();
-        lastPid = ble.send();
         if (lastPid > 0) {
           kill(lastPid, SIGKILL);
         }
