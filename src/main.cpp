@@ -149,13 +149,13 @@ float etaVy(float Vy, std::pair<unsigned long, Packet> pckt, BLE ble) {
   float newVy = Vy;
   if (ble.getUUID1() < pckt.second.serial) {
     int diff = ble.getUUID2() - pckt.second.eta;
-    if (diff < -3 || diff > 3) {
+    if (diff < -4 || diff > 4) {
       newVy = Vy;
     } else {
       std::time_t epoch = std::time(nullptr);
       long int t = ble.getUUID2() - static_cast<long int>(epoch);
       float d = Vy * t;
-      float tnew = static_cast<float>(t) + 4;
+      float tnew = static_cast<float>(t) + 5;
       newVy = d/tnew;
     }
   }
@@ -428,7 +428,7 @@ int main(int argc, char const *argv[]) {
       motors[i].stop();
       motorPins[i].posCount = 0;
     }
-    ble.setUUID2(0xFFFFF);
+    ble.setUUID2(usno);
     ble.send();
     motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
     std::cout << "Continue(y/n)? ";
