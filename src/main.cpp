@@ -434,12 +434,21 @@ int main(int argc, char const *argv[]) {
     std::cout << "Continue(y/n)? ";
     std::cin >> ss;
     if (ss == 'y') {
+      Vy = desired_Vy;
+      max_Vy = desired_Vy;
+      motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
+      for (unsigned i = 0; i < motors.size(); i++) {
+        motorPins[i].rpm = desired_rpm[i];
+        motorPins[i].posCount = 0;
+      }
       for (unsigned int cnt = 0; cnt < 9; cnt++) {
         /*Execute Motor control*/
         if ((turnCount%4) == 0) {
           Vy = desired_Vy; // reset the speed to desired speed after going through intersection
-	  max_Vy = desired_Vy;
+          max_Vy = desired_Vy;
+          std::cout << "RESET Vy After Intersection\n";
         }
+        std::cout << "TURN Vy = " << Vy << std::endl;
         Vx = 0.0;
         Wz = 0.0;
         motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
@@ -458,11 +467,11 @@ int main(int argc, char const *argv[]) {
           total = 0.0;
           white_flag = true;
           green_flag = true;
-	  if ((turnCount%4)!=3) {
+          if ((turnCount%4)!=3) {
               float dist = ultra.distance();
               Vy = distanceVy(Vy, max_Vy, dist, distance);
               distance = dist;
-	  }
+          }
           currColour = rgb.scan();
           switch (currColour) {
             case RED:
@@ -495,8 +504,8 @@ int main(int argc, char const *argv[]) {
             Wz = 0.0;
           }
           int remTurns = 3-turnCount;
-	  time = timeToIntersection(remTurns, Vy, total);
-	  ble.setUUID2(int(time));
+          time = timeToIntersection(remTurns, Vy, total);
+          ble.setUUID2(int(time));
           /*Construct updated send message*/
           auto currentTime = std::chrono::high_resolution_clock::now();
           if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastSend).count() > 500){
@@ -515,7 +524,7 @@ int main(int argc, char const *argv[]) {
             m.erase(sno);
             m.insert(std::pair<unsigned long,Packet>(sno, test));
           }
-	  if ((turnCount%4)!=3) {
+          if ((turnCount%4)!=3) {
             time = timeToIntersection(remTurns, Vy, total);
             ble.setUUID2(int(time));
             total = 0.0;
@@ -531,15 +540,16 @@ int main(int argc, char const *argv[]) {
             // calculatePosition(&m,&ble);
             for(auto const& pckt: m) {
               Vy = etaVy(Vy,pckt,ble);
-	      max_Vy = Vy;
-              std::cout << "         Serial: " << pckt.first << " ETA: " << pckt.second.eta << " new (Vy)   " << std::endl;
-	      m.erase(pckt.first);
+              max_Vy = Vy;
+              std::cout << "         Serial: " << pckt.first << " ETA: " << pckt.second.eta << " new (Vy)   " << Vy << std::endl;
+
+              std::cout << "This Bot Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Speed (Vy) " << Vy << std::endl;
+              m.erase(pckt.first);
             }
-            std::cout << "This Bot Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Speed (Vy) " << Vy << std::endl;
-	  }
+          }
           // Update the vehicle speed based on the ultrasonic sensor, rgb sensor, and the intersection collision avoidance
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
-	  total = 0.0;
+          total = 0.0;
           for (unsigned i = 0; i < 4; i++) {
             motorPins[i].rpm = desired_rpm[i];
             if (motorPins[i].posCount < 0) {
