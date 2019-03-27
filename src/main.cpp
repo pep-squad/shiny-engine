@@ -149,13 +149,13 @@ float etaVy(float Vy, std::pair<unsigned long, Packet> pckt, BLE ble) {
   float newVy = Vy;
   if (ble.getUUID1() < pckt.second.serial) {
     int diff = ble.getUUID2() - pckt.second.eta;
-    if (diff <= -3 || diff >= 3) {
+    if (diff < -3 || diff > 3) {
       newVy = Vy;
     } else {
       std::time_t epoch = std::time(nullptr);
       long int t = ble.getUUID2() - static_cast<long int>(epoch);
       float d = Vy * t;
-      float tnew = static_cast<float>(t) + 3;
+      float tnew = static_cast<float>(t) + 4;
       newVy = d/tnew;
     }
   }
@@ -342,7 +342,7 @@ int main(int argc, char const *argv[]) {
   std::thread t;
   std::vector<MotorPins> motorPins;
   std::vector<Motor> motors;
-  Turn turns[4] = {LEFT_TURN,LEFT_TURN,LEFT_TURN,RIGHT_TURN};
+  Turn turns[4] = {LEFT_TURN,LEFT_TURN,LEFT_TURN,LEFT_TURN};
   bool end = false;
   //motor1 1 setup
   MotorPins motorPin1;
@@ -428,7 +428,7 @@ int main(int argc, char const *argv[]) {
       motors[i].stop();
       motorPins[i].posCount = 0;
     }
-    ble.setUUID2(0xFFFFFF);
+    ble.setUUID2(0xFFFFF);
     ble.send();
     motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
     std::cout << "Continue(y/n)? ";
@@ -569,7 +569,7 @@ int main(int argc, char const *argv[]) {
           }
           int counter = 840*desired_rpm[0]/60*delay_time/1000;
           while(motorPins[0].posCount < counter) {
-            delay(10);
+            usleep(10);
           }
         } else if (turn == RIGHT_TURN) {
           int CornerRad = 100;
@@ -584,10 +584,23 @@ int main(int argc, char const *argv[]) {
           }
           int counter = 840*desired_rpm[1]/60*delay_time/1000;
           while(motorPins[1].posCount > counter) {
-            delay(10);
+            usleep(10);
           }
         }
         turnCount = (turnCount+1)%4;
+        int remTurns = 3-turnCount;
+        if (lastPid > 0) {
+          kill(lastPid, SIGKILL);
+        }
+        // come back here
+        total = 0.0;
+        time = timeToIntersection(remTurns, Vy, total);
+        ble.setUUID2(int(time));
+        lastSend = std::chrono::high_resolution_clock::now();
+        lastPid = ble.send();
+        if (lastPid > 0) {
+          kill(lastPid, SIGKILL);
+        }
       }
       if (lastPid > 0) {
         kill(lastPid, SIGKILL);
