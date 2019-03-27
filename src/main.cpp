@@ -398,7 +398,7 @@ int main(int argc, char const *argv[]) {
   float desired_Vy = 130.0;
   float max_Vy = desired_Vy;
   float distance = 0;
-  int turnCount = 0;
+  int turnCount = 1;
   /*COMMS SETUP*/
   system("sh bash/ble_setup.sh");
   FILE *pipe = popen("cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16-", "r");
@@ -419,7 +419,7 @@ int main(int argc, char const *argv[]) {
   sleep(1);
   auto lastSend = std::chrono::high_resolution_clock::now();
   pid_t lastPid = -1;
-  lastPid = ble.send();
+  // lastPid = ble.send();
   char ss;
   /*------CONTROL LOOP------*/
   do {
@@ -516,6 +516,18 @@ int main(int argc, char const *argv[]) {
             m.insert(std::pair<unsigned long,Packet>(sno, test));
           }
 	  if ((turnCount%4)!=3) {
+            time = timeToIntersection(remTurns, Vy, total);
+            ble.setUUID2(int(time));
+            total = 0.0;
+            for (unsigned i = 0; i < 4; i++) {
+              motorPins[i].rpm = desired_rpm[i];
+              if (motorPins[i].posCount < 0) {
+                total += (motorPins[i].posCount*-1);
+              } else {
+                total += motorPins[i].posCount;
+              }
+            }
+            total /= 4;
             // calculatePosition(&m,&ble);
             for(auto const& pckt: m) {
               Vy = etaVy(Vy,pckt,ble);
