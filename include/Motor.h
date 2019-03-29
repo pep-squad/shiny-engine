@@ -28,7 +28,7 @@ private:
   pwm type;
   pins pinNum;
   Encoder encType;
-  int newA, newB, oldA, oldB, count;
+  int newA, newB, oldA, oldB, count, totalCount;
   float rpm;
 protected:
   void setupSoftPwmEncoder();
@@ -54,6 +54,7 @@ public:
   void setNewA(int val);
   void setNewB(int val);
   void setCount(int val);
+  void setPositionCount(int val);
   void setRpm(float val);
 
   void setDirection1(int pin);
@@ -68,6 +69,7 @@ public:
   int getNewA();
   int getNewB();
   int getCount();
+  int getPositionCount();
   float getRpm();
 };
 

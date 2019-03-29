@@ -16,7 +16,7 @@ Motor::Motor(int pinDirection1, int pinDirection2) : \
 
 Motor::Motor(int pinDirection1, int pinDirection2, int encoderA, int encoderB) : \
  direction1(pinDirection1), direction2(pinDirection2), encoderA(encoderA), encoderB(encoderB), type(SOFTWARE), pinNum(TWO), encType(ON), \
- newA(0), newB(0), oldA(0), oldB(0), count(0), rpm(0) {
+ newA(0), newB(0), oldA(0), oldB(0), count(0), totalCount(0), rpm(0) {
 	setupSoftPwmEncoder();
 }
 
@@ -157,6 +157,7 @@ void Motor::encoderStage(int encVal) {
     case 14:
     //forward direciton
 			count++;
+			totalCount++;
       break;
     case 2:
     case 4:
@@ -164,6 +165,7 @@ void Motor::encoderStage(int encVal) {
     case 13:
     //reverse direction
 			count--;
+			totalCount--;
       break;
 	}
 }
@@ -197,6 +199,9 @@ void Motor::setNewB(int val) {
 void Motor::setCount(int val) {
 	count = val;
 }
+void Motor::setPositionCount(int val) {
+	totalCount = val;
+}
 void Motor::setRpm(float val) {
 	rpm = val;
 }
@@ -228,6 +233,9 @@ int Motor::getNewA() {
 }
 int Motor::getNewB() {
 	return newB;
+}
+int Motor::getPositionCount() {
+	return totalCount;
 }
 int Motor::getCount() {
 	return count;

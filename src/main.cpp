@@ -156,11 +156,11 @@ float etaVy(float Vy, std::pair<unsigned long, Packet> pckt, BLE &ble, float tim
       newVy = Vy;
     } else {
       float d = Vy * time;
-      float tnew = time + diff;
+      float tnew = time;// + diff;
       if (diff < 0.0) { // speed up the car
-          tnew -= 1;
+          tnew += 6;
       } else { // slow down the car
-          tnew += 1;
+          tnew += 3;
       }
       newVy = d/tnew;
       printf("time=%f d=%f tnew=%f newVy=%f\n",time,d,tnew,newVy);
@@ -243,14 +243,15 @@ void motorThread(bool &end, std::vector<MotorPins> &motorPins, std::vector<Motor
       motors[i].setOldB(motors[i].getNewB());
     }
     rpm_time = std::chrono::duration_cast<std::chrono::milliseconds>(finish - deltaT).count();
-    if (rpm_time > 15) {
+    if (rpm_time > 30) {
       for (unsigned i = 0; i < 4; i++) {
         rpm[i][2] = rpm[i][1];
         rpm[i][1] = rpm[i][0];
         rpm[i][0] = motors[i].getCount()/(rpm_time/1000 * scale)*60;
-        float rpm_avg = (rpm[i][0] + rpm[i][1])/2;
+        //float rpm_avg = (rpm[i][0] + rpm[i][1])/2;
+	float rpm_avg = rpm[i][0];
         motors[i].setRpm(rpm_avg);
-        motorPins[i].posCount += motors[i].getCount();
+        // motorPins[i].posCount += motors[i].getCount();
         motors[i].setCount(0);
         if (rpm_avg > motorPins[i].rpm) {
           if ((rpm_avg-5) > motorPins[i].rpm) {
@@ -341,7 +342,7 @@ int main(int argc, char const *argv[]) {
   std::thread t;
   std::vector<MotorPins> motorPins;
   std::vector<Motor> motors;
-  Turn turns[4] = {LEFT_TURN,LEFT_TURN,LEFT_TURN,LEFT_TURN};
+  Turn turns[4] = {LEFT_TURN,LEFT_TURN,LEFT_TURN,RIGHT_TURN};
   bool end = false;
   //motor1 1 setup
   MotorPins motorPin1;
@@ -394,10 +395,10 @@ int main(int argc, char const *argv[]) {
   }
   // testUltra(ultra);
   // testColour(rgb);
-  float desired_Vy = 130.0;
+  float desired_Vy = 110.0;
   float max_Vy = desired_Vy;
   float distance = 0;
-  int turnCount = 0;
+  int turnCount = 2;
   /*COMMS SETUP*/
   system("sh bash/ble_setup.sh");
   FILE *pipe = popen("cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16-", "r");
@@ -425,7 +426,8 @@ int main(int argc, char const *argv[]) {
     for (unsigned i = 0; i < motors.size(); i++) {
       motorPins[i].rpm = 0;
       motors[i].stop();
-      motorPins[i].posCount = 0;
+      //motorPins[i].posCount = 0;
+      motors[i].setPositionCount(0);
     }
     ble.setUUID2(usno);
     ble.send();
@@ -438,7 +440,8 @@ int main(int argc, char const *argv[]) {
       motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
       for (unsigned i = 0; i < motors.size(); i++) {
         motorPins[i].rpm = desired_rpm[i];
-        motorPins[i].posCount = 0;
+        //motorPins[i].posCount = 0;
+        motors[i].setPositionCount(0);
       }
       for (unsigned int cnt = 0; cnt < 8; cnt++) {
         /*Execute Motor control*/
@@ -453,7 +456,8 @@ int main(int argc, char const *argv[]) {
         motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
         for (unsigned i = 0; i < motors.size(); i++) {
           motorPins[i].rpm = desired_rpm[i];
-          motorPins[i].posCount = 0;
+          //motorPins[i].posCount = 0;
+          motors[i].setPositionCount(0);
         }
         Colour currColour;
         bool white_flag = true;
@@ -480,11 +484,13 @@ int main(int argc, char const *argv[]) {
             }
             break;
             case GREEN:
+	    //std::cout << "GREEN\n";
             corner++;
             x = 0;
             green_flag = false;
             break;
             case WHITE:
+	    //std::cout << "WHITE\n";
             corner++;
             x = 0;
             white_flag = false;
@@ -512,9 +518,6 @@ int main(int argc, char const *argv[]) {
           /*Construct updated send message*/
           auto currentTime = std::chrono::high_resolution_clock::now();
           if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastSend).count() > 500){
-            if (lastPid > 0) {
-              kill(lastPid, SIGKILL);
-            }
             lastPid = ble.send();
             lastSend = std::chrono::high_resolution_clock::now();
           }
@@ -542,17 +545,18 @@ int main(int argc, char const *argv[]) {
           total = 0.0;
           for (unsigned i = 0; i < 4; i++) {
             motorPins[i].rpm = desired_rpm[i];
-            if (motorPins[i].posCount < 0) {
-              total += (motorPins[i].posCount*-1);
+            //if (motorPins[i].posCount < 0) {
+            if (motors[i].getPositionCount() < 0) {
+              total += (motors[i].getPositionCount()*-1);
             } else {
-              total += motorPins[i].posCount;
+              total += motors[i].getPositionCount();
             }
           }
           total /= 4;
-          if (total >= 600.0) {
+          if (total >= 590.0) {
             red_flag = false;
           }
-          usleep(10);
+          //usleep(10);
         }
         //////////// TURNING SECTION ////////////////
         Turn turn = turns[turnCount];
@@ -561,39 +565,35 @@ int main(int argc, char const *argv[]) {
           float delay_time = 0.0;
           float turn_Vy = 100.0;
           Vx = 0.0;
-          trajectoryPlan(Wz, turn_Vy, CornerRad, delay_time,85.0);
+          trajectoryPlan(Wz, turn_Vy, CornerRad, delay_time,82.0);
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
           for (unsigned i = 0; i < 4; i++) {
             motorPins[i].rpm = desired_rpm[i];
-            motorPins[i].posCount = 0;
+            // motorPins[i].posCount = 0;
+	    motors[i].setPositionCount(0);
           }
           int counter = 840*desired_rpm[0]/60*delay_time/1000;
-          while(motorPins[0].posCount < counter) {
-            usleep(10);
+          while(motors[0].getPositionCount() < counter) {
+            usleep(5);
           }
         } else if (turn == RIGHT_TURN) {
           int CornerRad = 100;
           float delay_time = 0.0;
           float turn_Vy = 100.0;
           Vx = 0.0;
-          trajectoryPlan(Wz, turn_Vy, CornerRad, delay_time,-85.0);
+          trajectoryPlan(Wz, turn_Vy, CornerRad, delay_time,-82.0);
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
           for (unsigned i = 0; i < 4; i++) {
             motorPins[i].rpm = desired_rpm[i];
-            motorPins[i].posCount = 0;
+            //motorPins[i].posCount = 0;
+	    motors[i].setPositionCount(0);
           }
           int counter = 840*desired_rpm[1]/60*delay_time/1000;
-          while(motorPins[1].posCount > counter) {
-            usleep(10);
+          while(motors[1].getPositionCount() > counter) {
+            usleep(5);
           }
         }
         turnCount = (turnCount+1)%4;
-        if (lastPid > 0) {
-          kill(lastPid, SIGKILL);
-        }
-      }
-      if (lastPid > 0) {
-        kill(lastPid, SIGKILL);
       }
     }
   } while (ss == 'y');
