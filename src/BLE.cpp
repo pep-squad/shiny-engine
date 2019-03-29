@@ -112,7 +112,9 @@ pid_t BLE::send() {
   // Send the packet
   stringStream << "hcitool -i hci0 cmd 0x08 0x0008 " << std::hex << p1 << " " << p2 << " " << p3 << " " << p4 << " " << p5 << " " << p6 << " " << p7 << " " << p8 << " " << p9 << " " << p10 << " " << u1<< " " << u2 << " " << u3 << " " << u4 << " " << u5 << " " << u6 << " " << u7 << " " << u8 << " " << u9 << " " << u10 << " " << u11 << " " << u12 << " " << u13 << " " << u14 << " " << u15 << " " << u16<< " " << maj1 << " " << maj2 << " " << min1 << " " << min2 << " " << tx << " 00 > dump.txt &";
   std::string cmd = stringStream.str();
-  //system(cmd.c_str());
+  // system(cmd.c_str());
+  FILE *pipe = popen(cmd.c_str(), "r");
+  pclose(pipe);
   return 0; 
 }
 

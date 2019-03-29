@@ -401,7 +401,10 @@ int main(int argc, char const *argv[]) {
   int turnCount = 2;
   /*COMMS SETUP*/
   system("sh bash/ble_setup.sh");
+  auto t1 = std::chrono::high_resolution_clock::now();
   FILE *pipe = popen("cat /proc/cpuinfo | grep 'Serial' | sed -e 's/[ \t]//g' | cut -c 16-", "r");
+  auto t2 = std::chrono::high_resolution_clock::now();
+  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << std::endl;
   std::map<unsigned long, Packet> m;
   std::array<char, 128> buffer;
   std::string sno;
@@ -414,9 +417,9 @@ int main(int argc, char const *argv[]) {
   unsigned long usno;
   iss >> std::hex >> usno;
   BLE ble (0x1e02011a, 0x1aff4c00, 0x0215, usno, 0x0, 0x0, 0x0, 0xde, 0x6f, 0x78);
-  std::thread v;
-  v = std::thread(scanThread, std::ref(ble));
-  sleep(1);
+  //std::thread v;
+  //v = std::thread(scanThread, std::ref(ble));
+  //sleep(1);
   auto lastSend = std::chrono::high_resolution_clock::now();
   pid_t lastPid = -1;
   // lastPid = ble.send();
@@ -429,8 +432,8 @@ int main(int argc, char const *argv[]) {
       //motorPins[i].posCount = 0;
       motors[i].setPositionCount(0);
     }
-    ble.setUUID2(usno);
-    ble.send();
+    //ble.setUUID2(usno);
+    //ble.send();
     motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
     std::cout << "Continue(y/n)? ";
     std::cin >> ss;
@@ -470,11 +473,9 @@ int main(int argc, char const *argv[]) {
           total = 0.0;
           white_flag = true;
           green_flag = true;
-          if ((turnCount%4)!=3) {
-              float dist = ultra.distance();
-              Vy = distanceVy(Vy, max_Vy, dist, distance);
-              distance = dist;
-          }
+          float dist = ultra.distance();
+          Vy = distanceVy(Vy, max_Vy, dist, distance);
+          distance = dist;
           currColour = rgb.scan();
           switch (currColour) {
             case RED:
@@ -514,15 +515,15 @@ int main(int argc, char const *argv[]) {
 	  time = timeToIntersection(remTurns, Vy, total);
 	  long int time_l = static_cast<long int>(time);
 	  time_l += epoch_int;
-          ble.setUUID2(time_l);
+          //ble.setUUID2(time_l);
           /*Construct updated send message*/
-          auto currentTime = std::chrono::high_resolution_clock::now();
+          /*auto currentTime = std::chrono::high_resolution_clock::now();
           if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastSend).count() > 500){
             lastPid = ble.send();
             lastSend = std::chrono::high_resolution_clock::now();
-          }
+          }*/
           /*COMMS routine for determining desired Vy*/
-          while (!ble.packets.empty()) {
+          /*while (!ble.packets.empty()) {
             BLE t = ble.packets.front();
             ble.packets.pop();
             unsigned long sno = t.getUUID1();
@@ -539,7 +540,7 @@ int main(int argc, char const *argv[]) {
               std::cout << "This Bot Serial: " << ble.getUUID1() << " ETA: " << ble.getUUID2() << " Speed (Vy) " << Vy << std::endl;
               m.erase(pckt.first);
             }
-          }
+          }*/
           // Update the vehicle speed based on the ultrasonic sensor, rgb sensor, and the intersection collision avoidance
           motorSpeed(Wz, Vx, Vy, std::ref(desired_rpm));
           total = 0.0;
@@ -600,6 +601,6 @@ int main(int argc, char const *argv[]) {
   end = true;
   delay(1000);
   t.detach();
-  v.detach();
+  //v.detach();
   return 0;
 }

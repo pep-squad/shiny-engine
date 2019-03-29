@@ -1,7 +1,7 @@
 #include "TCS3200.h"
 // Public
 TCS3200::TCS3200(int s3, int s4, int out) : s3(s3), s4(s4), out(out) {
-  whiteColour = 150000;
+  whiteColour = 130000;
   redColour = 260000;
   blackColour = 800000;
   prevCount = 0;
